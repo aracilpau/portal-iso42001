@@ -1,0 +1,62 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Empresa, paso {{ n }} · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# El cuestionario paso a paso: sale la primera vez que se entra en una empresa sin empezar #}
+<div class="paso">
+    <header>
+        <p class="antetitulo">Empresa · paso {{ n }} de {{ pasos|length }}</p>
+        <h1 class="titular">{{ titulo }}</h1>
+        <ol class="paso-barra" aria-hidden="true">
+            {% for _, t in pasos %}<li class="{% if loop.index < n %}hecho{% elif loop.index == n %}ahora{% endif %}" title="{{ t }}"></li>{% endfor %}
+        </ol>
+        {% if n == 1 %}
+        <p class="bajada">Antes de empezar, unas preguntas sobre la empresa. Con ellas se decide la Declaración y se redactan
+            los borradores. Contesta en llano; lo que no sepas, sáltalo: todo se puede cambiar después en «Empresa».</p>
+        {% endif %}
+    </header>
+
+    <form class="paso-form" method="post" action="/empresa/paso/{{ n }}">
+        {% if clave == 'datos' %}
+        <div class="cuestionario-datos">
+            {% for c, t, ejemplo in datos_empresa %}
+            <div class="campo">
+                <label for="r-{{ c }}">{{ t }}</label>
+                <input id="r-{{ c }}" name="r.{{ c }}" type="text" value="{{ perfil.datos[c] }}" placeholder="Ej.: {{ ejemplo }}">
+            </div>
+            {% endfor %}
+        </div>
+        {% elif clave == 'sino' %}
+        <ol class="cuestionario-preguntas">
+            {% for q in preguntas %}
+            <li class="cuestionario-pregunta">
+                <span class="cuestionario-num">{{ loop.index }}</span>
+                <span class="cuestionario-texto">{{ q.texto }}</span>
+                <span class="opciones" role="radiogroup" aria-label="{{ q.texto }}">
+                    {% for v, texto in respuestas_posibles.items() %}
+                    <label><input type="radio" name="r.{{ q.clave }}" value="{{ v }}" {% if perfil.guardadas[q.clave] == v %}checked{% endif %}> {{ texto }}</label>
+                    {% endfor %}
+                </span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <ol class="abiertas">
+            {% for q in abiertas %}
+            <li class="abierta">
+                <label class="abierta-texto" for="r-{{ q.clave }}">{{ q.texto }}</label>
+                <textarea id="r-{{ q.clave }}" name="r.{{ q.clave }}" rows="3" placeholder="Ej.: {{ q.ejemplo }}">{{ perfil.abiertas[q.clave] }}</textarea>
+            </li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+
+        <div class="paso-botones">
+            <button class="boton boton-acento" type="submit" name="ir" value="siguiente">{% if n == pasos|length %}Terminar{% else %}Siguiente{% endif %}</button>
+            <button class="boton" type="submit" name="ir" value="saltar">Saltar este paso</button>
+            <button class="enlace" type="submit" name="ir" value="terminar">Saltar el cuestionario</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

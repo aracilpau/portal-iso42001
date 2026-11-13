@@ -1,0 +1,159 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+
+{% block contenido %}
+{# Lo que hay que hacer, ordenado por urgencia: los avisos viven aquí #}
+{% set n = hay.vencidos|length + hay.pronto|length + hay.recordatorios|length + hay.pregunta|length + hay.altas|length %}
+<section class="saludo">
+    <div>
+        <p class="antetitulo">{{ hoy|fecha_larga }} · {{ espacio.nombre }}</p>
+        <h1 class="titular">{% if n %}Te queda{{ 'n' if n != 1 }} <em>{{ n }} cosa{{ 's' if n != 1 }}</em><br>por hacer.{% else %}Todo <em>al día</em>.{% endif %}</h1>
+        <p>
+            {% set v = hay.vencidos|length %}
+            {% if v %}{{ v }} punto{{ 's' if v != 1 }} ya ha{{ 'n' if v != 1 }} vencido y no cuenta{{ 'n' if v != 1 }} en el porcentaje hasta que lo{{ 's' if v != 1 }} renueves.
+            {% elif hay.pronto %}Lo más urgente vence el {{ hay.pronto[0].vence|fecha }}.
+            {% elif n %}Nada vencido ni a punto de vencer.
+            {% else %}No hay nada vencido, nada que venza pronto ni recordatorios pendientes.{% endif %}
+        </p>
+    </div>
+    <a class="boton boton-acento" href="/requisitos?ver=pendientes">Ver todo lo pendiente →</a>
+</section>
+
+<div class="inicio">
+    <div>
+        <div class="seccion-titulo"><h2>Cómo vas</h2><small>pasa el ratón por un cuadro</small></div>
+        <div class="cifras">
+            {% for nombre, av, de in [('Obligatorios', est.obligatorios, 'completos'), ('Anexo A', est.controles, 'que aplican')] %}
+            <a class="cifra" href="/requisitos">
+                <p class="antetitulo">{{ nombre }}</p>
+                <div class="cifra-num">{{ av.porcentaje }}<small>%</small></div>
+                <div class="barra-avance"><span style="width: {{ av.porcentaje }}%"></span></div>
+                <p class="cifra-de">{{ av.hechos }} de {{ av.total }} {{ de }}</p>
+            </a>
+            {% endfor %}
+        </div>
+        {% if sin_decidir %}
+        <p class="pie-cifras alerta">
+            {% if sin_decidir == guia.controles %}Aún no has decidido qué controles del Anexo A aplican a tu empresa.
+            {% else %}Quedan {{ sin_decidir }} control{{ 'es' if sin_decidir != 1 }} del Anexo A sin decidir.{% endif %}
+            Mientras tanto cuentan como si aplicaran. <a href="/declaracion">Decidir en la Declaración</a>
+        </p>
+        {% endif %}
+        {% if faltan_empresa %}
+        <p class="pie-cifras alerta">
+            Te queda{{ 'n' if faltan_empresa != 1 }} {{ faltan_empresa }} pregunta{{ 's' if faltan_empresa != 1 }} por aclarar en «Empresa»: las usan los borradores, la
+            Declaración y el chat. <a href="/empresa">Contestarlas</a>
+        </p>
+        {% endif %}
+        {% set desde, hasta, anterior = periodo_revision %}
+        <form class="revision93" method="post" action="/revision-direccion" data-descargar>
+            <button class="boton" type="submit" {% if not ia_disponible %}disabled title="Claude no está disponible en este ordenador"{% endif %}>
+                <span class="sin-pensar">Preparar la revisión del año →</span>
+                <span class="pensando">Preparando… (puede tardar un minuto)</span>
+            </button>
+            <p class="ayuda">Borrador del acta de la revisión por la dirección (9.3), en Word, con lo del {{ desde|fecha }} al
+                {{ hasta|fecha }}{% if not anterior %}: el último año, porque aún no hay ninguna revisión subida a la 9.3{% endif %}.</p>
+            <p class="mensaje mensaje-error" data-descargar-error role="alert" hidden></p>
+        </form>
+        <p class="pie-cifras">Recomendados: {{ est.recomendados.hechos }} de {{ est.recomendados.total }} · no cuentan en el porcentaje</p>
+
+        <div class="mapa" aria-label="Estado de cada requisito">
+            {% set NOMBRES = {'hecho': 'Completo', 'curso': 'En curso', 'pendiente': 'Sin empezar', 'vencido': 'Algo vencido',
+                              'pronto': 'Algo vence pronto', 'noaplica': 'No aplica'} %}
+            {% for parte, bs in bloques %}{% for bloque, reqs in bs %}
+            <div class="mapa-fila">
+                <span class="mapa-nombre">{{ bloque }}</span>
+                <span class="mapa-celdas">
+                    {% for r in reqs %}{% set e, pct = estados[r.codigo] %}
+                    <a class="celda c-{{ e }}" href="/requisitos/{{ r.codigo }}" style="--p: {{ pct }}%"
+                       data-info="{{ r.codigo }} · {{ r.titulo }} — {{ NOMBRES[e] }}{% if e not in ('hecho', 'noaplica') %} · {{ pct }} %{% endif %}"
+                       aria-label="{{ r.codigo }} {{ r.titulo }}: {{ NOMBRES[e] }}"></a>
+                    {% endfor %}
+                </span>
+            </div>
+            {% endfor %}{% endfor %}
+        </div>
+        <div class="leyenda">
+            <span><i class="c-hecho"></i>Completo</span><span><i class="c-curso" style="--p: 50%"></i>En curso</span>
+            <span><i class="c-pendiente"></i>Sin empezar</span><span><i class="c-pronto"></i>Vence pronto</span>
+            <span><i class="c-vencido"></i>Vencido</span><span><i class="c-noaplica"></i>No aplica</span>
+        </div>
+    </div>
+
+    <div>
+        <div class="seccion-titulo"><h2>Lo siguiente</h2><small>ordenado por urgencia</small></div>
+        <ol class="tareas" id="tareas">
+            {% for lista, sello, cls in [(hay.vencidos, 'Vencido', 's-mal'), (hay.pronto, 'Vence', 's-aviso')] %}
+            {% for a in lista %}
+            {% set url = '/requisitos/' ~ a.requisito.codigo ~ '#' ~ a.punto.codigo ~ ('-' ~ a.sistema.id if a.sistema else '') %}
+            <li class="tarea">
+                <span class="sello {{ cls }}">{% if cls == 's-mal' %}Vencido{% else %}Vence {{ a.vence|dia_mes }}{% endif %}</span>
+                <div class="tarea-que">
+                    <strong><a href="{{ url }}"><span class="mono">{{ a.punto.codigo }}</span> · {% if a.sistema %}{{ a.sistema.nombre }} · {% endif %}{{ a.requisito.titulo }}</a></strong>
+                    <span>{% if cls == 's-mal' %}Venció el {{ a.vence|fecha }}: no cuenta hasta que lo renueves.{% else %}Vence el {{ a.vence|fecha }}.{% endif %}</span>
+                </div>
+                <div class="tarea-acciones"><a class="boton boton-mini" href="{{ url }}">Ir a renovar</a></div>
+            </li>
+            {% endfor %}
+            {% endfor %}
+
+            {% for r, cuando in hay.recordatorios %}
+            <li class="tarea">
+                <span class="sello s-acento">Recordatorio</span>
+                <div class="tarea-que">
+                    <strong><a href="/requisitos/{{ r.codigo }}"><span class="mono">{{ r.codigo }}</span> · {{ r.titulo }}</a></strong>
+                    <span>Tocaba el {{ cuando|fecha }}. Repásalo y apunta lo nuevo.</span>
+                </div>
+                <div class="tarea-acciones">
+                    <form class="en-linea" method="post" action="/avisos/recordatorio/{{ r.codigo }}/hecho">
+                        <button class="boton boton-mini" type="submit">Hecho</button>
+                    </form>
+                    <a class="enlace" href="/requisitos/{{ r.codigo }}">Abrir</a>
+                </div>
+            </li>
+            {% endfor %}
+
+            {% for x, como in hay.altas %}
+            <li class="tarea">
+                <span class="sello s-acento">Sistema nuevo</span>
+                <div class="tarea-que">
+                    <strong><a href="/inventario/{{ x.id }}">{{ x.nombre }}</a></strong>
+                    <span>{% if como == 'activado' %}Lo has vuelto a activar{% else %}Lo has dado de alta{% endif %}: ¿reabrimos los riesgos y los proveedores?</span>
+                </div>
+                <div class="tarea-acciones">
+                    <a class="boton boton-mini" href="/inventario/{{ x.id }}">Decidir</a>
+                    <form class="en-linea" method="post" action="/inventario/{{ x.id }}/no-reabrir">
+                        <button class="enlace" type="submit">No hace falta</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+
+            {% if hay.pregunta %}
+            <li class="tarea">
+                <span class="sello s-acento">Pregunta</span>
+                <div class="tarea-que">
+                    <strong>¿Ha pasado algo?</strong>
+                    <span>Tocaba preguntarlo el {{ hay.pregunta[0]|fecha }}. Si ha pasado, elígelo abajo.</span>
+                </div>
+                <div class="tarea-acciones">
+                    <form class="en-linea" method="post" action="/avisos/nada">
+                        <button class="boton boton-mini" type="submit">No, nada</button>
+                    </form>
+                </div>
+            </li>
+            {% endif %}
+
+            {% if not n %}<li class="tareas-vacio">Nada pendiente por ahora. Cuando algo venza o toque un recordatorio, saldrá aquí.</li>{% endif %}
+        </ol>
+
+        <section class="pasado" aria-labelledby="pasado-titulo">
+            <h2 id="pasado-titulo">¿Ha pasado algo?</h2>
+            <p>Hay requisitos que no vencen por fecha: se revisan cuando pasa algo. Elige qué ha pasado y te digo cuáles tocan.</p>
+            <div class="situaciones">
+                {% for s in situaciones %}<a href="/eventos/{{ s.clave }}" title="{{ s.cuando }}">{{ s.titulo }}</a>{% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+
+{% block titulo %}Ajustes · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<div id="ajustes">
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Ajustes</p>
+        <h1 class="titular">Ajustes</h1>
+        <p class="bajada">Qué te avisa, cada cuánto se revisa todo y cómo se ve el portal. Todo se guarda al cambiarlo.</p>
+    </div>
+</header>
+
+<div class="ajustes-rejilla">
+    <section class="caja" id="que-avisa">
+        <h2>Qué sale en «Lo siguiente»</h2>
+        <form class="ajuste-form casillas" method="post" action="/ajustes/avisos"
+              hx-post="/ajustes/avisos" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+            {% for clave, (texto, activo) in avisos.items() %}
+            <label><input type="checkbox" name="{{ clave }}" value="1" {% if activo %}checked{% endif %}> {{ texto }}</label>
+            {% endfor %}
+            <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+        </form>
+        <p class="caja-pie sub">Sale en la lista de Inicio.</p>
+    </section>
+
+    <section class="caja" id="correo">
+        <h2>Avisos por correo</h2>
+        {% if correo.ok %}<p class="mensaje" role="status">{{ correo.ok }}</p>{% endif %}
+        {% if correo.error %}<p class="mensaje mensaje-error" role="alert">{{ correo.error }}</p>{% endif %}
+        <form class="ajuste-form correo-form" method="post" action="/ajustes/correo">
+            <label><input type="checkbox" name="activado" value="1" {% if correo.activado %}checked{% endif %}> Mandarlos por correo y con notificación</label>
+            {% if correo.usuarios %}
+            <fieldset class="correo-usuarios">
+                <legend class="etiqueta-campo">Los usuarios de esta empresa</legend>
+                {% for u, recibe in correo.usuarios %}
+                <label><input type="checkbox" name="recibe" value="{{ u.correo }}" {% if recibe %}checked{% endif %}> {{ u.nombre }} <span class="sub">{{ u.correo }}</span></label>
+                {% endfor %}
+            </fieldset>
+            {% endif %}
+            <label class="etiqueta-campo" for="correo-para">Además, a otros correos (separados por comas)</label>
+            <input id="correo-para" name="para" type="text" value="{{ correo.para }}" placeholder="nombre@empresa.com">
+            <label class="etiqueta-campo" for="correo-cuenta">Desde qué cuenta de Outlook (vacío: la principal)</label>
+            <input id="correo-cuenta" name="cuenta" type="text" value="{{ correo.cuenta }}" list="correo-cuentas" autocomplete="off">
+            <datalist id="correo-cuentas">{% for c in correo.cuentas %}<option value="{{ c }}">{% endfor %}</datalist>
+            <span><button class="boton boton-mini" type="submit">Guardar</button></span>
+        </form>
+        <form method="post" action="/ajustes/correo/prueba">
+            <button class="boton boton-mini" type="submit">Mandar un aviso de prueba</button>
+        </form>
+        {% if correo.activado and not correo.programada %}
+        <p class="mensaje mensaje-aviso">Falta programarlos en Windows: doble clic a <code>programar-avisos.bat</code>.</p>
+        {% endif %}
+        <p class="caja-pie sub">El día 1, el resumen del mes; cada lunes, lo vencido y lo que vence esa semana. A las 9:00 o al
+            encender. Desde el Outlook clásico de este ordenador.{% if correo.mes %} Último resumen: {{ correo.mes[5:7] }}/{{ correo.mes[:4] }}.{% endif %}{% if correo.semana %} Último lunes: {{ correo.semana[8:10] }}/{{ correo.semana[5:7] }}.{% endif %}</p>
+    </section>
+
+    <section class="caja" id="preguntar">
+        <h2>Cada cuánto pregunta si ha pasado algo</h2>
+        <form class="ajuste-form" method="post" action="/ajustes/preguntar"
+              hx-post="/ajustes/preguntar" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+            <label class="oculto" for="preguntar-cada">Preguntar «¿Ha pasado algo?»</label>
+            <select id="preguntar-cada" name="meses">
+                {% for n in preguntar %}
+                <option value="{{ n }}" {% if preguntar_cada == n %}selected{% endif %}>{% if n %}Cada {{ n }} mes{{ 'es' if n > 1 }}{% else %}Nunca{% endif %}{% if n == PREGUNTAR_POR_DEFECTO %} (recomendado){% endif %}</option>
+                {% endfor %}
+            </select>
+            <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+        </form>
+        <p class="caja-pie sub">Para los requisitos que se reabren cuando pasa algo.{% if proxima_pregunta %} Próxima vez: {{ proxima_pregunta|fecha }}.{% endif %}</p>
+    </section>
+
+    <section class="caja" id="revision">
+        <h2>Cada cuánto se revisa todo</h2>
+        <form class="ajuste-form" id="plazo-general" method="post" action="/ajustes/plazo-general"
+              hx-post="/ajustes/plazo-general" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+            <label class="oculto" for="meses-general">Revisión general</label>
+            <select id="meses-general" name="meses">
+                {% for n in plazos %}
+                <option value="{{ n }}" {% if est.plazo_general == n %}selected{% endif %}>{{ n|cada }}{% if n == 12 %} (recomendado){% endif %}</option>
+                {% endfor %}
+            </select>
+            <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+        </form>
+        <p class="caja-pie sub">La misma para todos los requisitos que vencen. Por defecto, cada año: antes de la auditoría anual del certificador.</p>
+    </section>
+
+    <section class="caja" id="aspecto">
+        <h2>Aspecto</h2>
+        {# Se guarda en el navegador, no en el espacio: es cosa de quien mira la pantalla #}
+        <p class="etiqueta-campo">Tema</p>
+        <span class="opciones tema-opciones" role="radiogroup" aria-label="Tema">
+            {% for valor, texto in [('', 'Automático'), ('claro', 'Claro'), ('oscuro', 'Oscuro')] %}
+            <label><input type="radio" name="tema" value="{{ valor }}" {% if not valor %}checked{% endif %}> {{ texto }}</label>
+            {% endfor %}
+        </span>
+        <p class="caja-pie sub">Automático sigue al de Windows. Se recuerda en este ordenador.</p>
+    </section>
+</div>
+
+{% if cambiados %}
+<form class="mensaje mensaje-aviso por-defecto" method="post" action="/ajustes/plazos/por-defecto"
+      hx-post="/ajustes/plazos/por-defecto" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+    <span>Hay {{ cambiados }} cambio{{ 's' if cambiados != 1 }} respecto a lo recomendado (revisión general, plazos, recordatorios o la pregunta de si ha pasado algo).</span>
+    <button class="boton boton-mini" type="submit">Volver a los valores recomendados</button>
+</form>
+{% endif %}
+
+<details class="avanzadas" id="avanzadas" data-recordar>
+    <summary>Opciones avanzadas <span class="sub">casi nunca hace falta tocarlas: vienen con los valores recomendados</span></summary>
+
+    <section class="seccion" id="antelacion">
+        <div class="seccion-titulo"><h2>Cuándo avisa que vence pronto</h2></div>
+        <form class="ajuste-linea" method="post" action="/ajustes/antelacion"
+              hx-post="/ajustes/antelacion" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+            <label for="dias">Un punto pasa a «Vence pronto»</label>
+            <input id="dias" name="dias" type="number" min="0" max="365" value="{{ est.antelacion }}" class="numero">
+            <span>días antes de vencer. Sigue contando en el porcentaje hasta que vence.</span>
+            <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+        </form>
+    </section>
+
+    <section class="seccion">
+        <div class="seccion-titulo"><h2>Fechas de los puntos cumplidos</h2><small>{{ marcados|length }}</small></div>
+        <p class="ayuda">Cada punto vence al pasar el plazo de su requisito desde que se cumplió o se renovó.</p>
+        {% if marcados %}
+        <ol class="ajustes-lista">
+            {% for r, p, x in marcados %}
+            {% set e = est.estado_en(p, x) if x else est.estado(p) %}
+            {% set m = est.lineas[(p.codigo, x.id)] if x else est.marcas[p.codigo] %}
+            {% set vence = est.vence_en(p, x) if x else est.vence(p) %}
+            {% set clave = p.codigo ~ ('-' ~ x.id if x else '') %}
+            <li class="ajuste-fila" id="fecha-{{ clave }}">
+                <a class="mono" href="/requisitos/{{ r.codigo }}#{{ clave }}">{{ p.codigo }}</a>
+                {% if x %}<strong>{{ x.nombre }}</strong>{% endif %}
+                {% if e == VENCE_PRONTO %}<span class="sello s-aviso">Vence pronto</span>{% elif e == VENCIDO %}<span class="sello s-mal">Vencido</span>{% else %}<span class="sello s-ok">Cumplido</span>{% endif %}
+                <span class="sub">Desde el {{ m.desde|fecha }}</span>
+                <span class="sub">{% if vence %}Vence el {{ vence|fecha }}{% else %}No vence por fecha{% endif %}</span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="vacio">Aún no hay puntos cumplidos.</p>
+        {% endif %}
+    </section>
+
+    <section class="seccion" id="plazos">
+        <div class="seccion-titulo"><h2>Cada requisito: si vence y sus recordatorios</h2></div>
+        <p class="ayuda">En cada requisito solo se elige si vence con la revisión general o no vence por fecha (los «por
+            evento», que se reabren cuando pasa algo). Al cambiarlo se recalculan los puntos ya cumplidos.</p>
+        <p class="ayuda">Los recordatorios son para ir haciendo cosas durante el año. Vienen puestos los recomendados,
+            solo donde hace falta continuidad (objetivos, medición, mejora, formación, riesgos, inventario…). Son una recomendación
+            del portal: la norma no fija frecuencias. Si una opción no dice «(recomendado)», es que la has cambiado.</p>
+        <ol class="ajustes-lista">
+            {% for r in requisitos if r.puntos %}
+            {% set actual = est.plazo(r) %}
+            <li class="ajuste-fila plazo-fila" id="plazo-{{ r.codigo }}">
+                <a class="mono" href="/requisitos/{{ r.codigo }}">{{ r.codigo }}</a>
+                <span class="plazo-titulo">{{ r.titulo }}</span>
+                <form class="ajuste-plazo" method="post" action="/ajustes/plazo/{{ r.codigo }}"
+                      hx-post="/ajustes/plazo/{{ r.codigo }}" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+                    {% set defecto = vence_por_defecto(r) %}
+                    <label class="sub" for="meses-{{ r.codigo }}">Se revisa</label>
+                    <select id="meses-{{ r.codigo }}" name="vence">
+                        <option value="si" {% if actual %}selected{% endif %}>{{ est.plazo_general|cada }}{% if defecto %} (recomendado){% endif %}</option>
+                        <option value="no" {% if actual is none %}selected{% endif %}>No vence por fecha{% if not defecto %} (recomendado){% endif %}</option>
+                    </select>
+                    <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+                </form>
+                {% set rec = est.recordatorio(r) %}
+                {% set rec_defecto = RECORDAR_POR_DEFECTO.get(r.codigo) %}
+                <form class="ajuste-plazo" method="post" action="/ajustes/recordatorio/{{ r.codigo }}"
+                      hx-post="/ajustes/recordatorio/{{ r.codigo }}" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
+                    <label class="sub" for="recordar-{{ r.codigo }}">Recordar</label>
+                    <select id="recordar-{{ r.codigo }}" name="meses">
+                        <option value="no" {% if not rec %}selected{% endif %}>Nunca{% if not rec_defecto %} (recomendado){% endif %}</option>
+                        {% for n in recordar %}
+                        <option value="{{ n }}" {% if rec and rec.meses == n %}selected{% endif %}>Cada {{ n }} mes{{ 'es' if n > 1 }}{% if rec_defecto == n %} (recomendado){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <span class="sub plazo-proximo">{% if rec and est.proximo_recordatorio(r) %}Próximo aviso: {{ est.proximo_recordatorio(r)|fecha }}{% endif %}</span>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+</details>
+</div>
+{% endblock %}

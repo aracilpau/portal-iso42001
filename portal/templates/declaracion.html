@@ -1,0 +1,174 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Declaración de Aplicabilidad · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<div id="declaracion">
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">6.1.3.c · Anexo A</p>
+        <h1 class="titular">Declaración de Aplicabilidad</h1>
+        <p class="bajada" id="declaracion-resumen">
+            Decididos <strong>{{ decisiones|length }} de {{ total }}</strong> · aplican {{ aplican }} · no aplican {{ no_aplican }}
+        </p>
+    </div>
+    <nav class="filtros" aria-label="Partes de la Declaración">
+        <a href="/declaracion" {% if pestaña == 'controles' %}class="on" aria-current="page"{% endif %}>Controles</a>
+        <a href="/declaracion/cambios" {% if pestaña == 'cambios' %}class="on" aria-current="page"{% endif %}>Cambios</a>
+        <a href="/declaracion/documento" {% if pestaña == 'documento' %}class="on" aria-current="page"{% endif %}>Documento</a>
+    </nav>
+</header>
+
+{% if pestaña == 'controles' %}
+<p class="ayuda ayuda-arriba">Para cada control del Anexo A, decide si aplica a tu empresa y escribe por qué (en los dos casos:
+    el auditor pregunta por ambos). Se guarda solo. Mientras no lo decidas, cuenta en el porcentaje como si aplicara.</p>
+
+{# El cuestionario está en «Empresa»: aquí, solo cuánto falta, porque decide los controles #}
+<p class="cuestionario-enlace{% if not perfil.completo %} mensaje mensaje-aviso{% endif %}" id="cuestionario">
+    {% if perfil.completo %}Las respuestas de <a href="/empresa#cuestionario">«Empresa»</a> deciden muchos controles.
+    {% else %}Quedan {{ perfil.total - perfil.hechas }} de {{ perfil.total }} preguntas de <a href="/empresa#cuestionario">«Empresa»</a>
+    por aclarar: deciden muchos controles.{% endif %}
+</p>
+
+{# Ayuda con la Declaración: Claude propone, la persona acepta, cambia o descarta #}
+{% set pendientes = propuestas.items()|rejectattr(0, 'in', decisiones)|list %}
+{% set aceptables = pendientes|rejectattr('1.decision', 'equalto', 'falta')|list %}
+<section class="propuestas-barra" id="propuestas">
+    <form method="post" action="/declaracion/proponer"
+          hx-post="/declaracion/proponer" hx-target="#declaracion" hx-select="#declaracion" hx-swap="outerHTML"
+          hx-disabled-elt="find button">
+        <button class="boton boton-acento" type="submit">
+            <span class="sin-pensar">{% if propuestas %}Volver a proponer{% else %}Proponer{% endif %}</span>
+            <span class="pensando">Pensando… (puede tardar un minuto)</span>
+        </button>
+    </form>
+    <span class="ayuda">
+        {% if not ia_disponible %}Claude no está disponible: se proponen los controles que se deciden con tus respuestas; los demás, cuando esté.
+        {% elif not perfil.completo %}Contesta antes el cuestionario: con respuestas en blanco o en «No lo sé», las propuestas salen peor.
+        {% elif propuestas %}{{ pendientes|length }} propuesta{{ 's' if pendientes|length != 1 }} sin decidir. Nada cambia hasta que aceptas.
+        {% else %}Los controles claros se deciden con tus respuestas; los dudosos, la IA con tu inventario. Nada cambia hasta que aceptas.{% endif %}
+    </span>
+    {% if aceptables %}
+    <form method="post" action="/declaracion/propuestas/aceptar-todas"
+          hx-post="/declaracion/propuestas/aceptar-todas" hx-target="#declaracion" hx-select="#declaracion" hx-swap="outerHTML">
+        <button class="boton" type="submit">Aceptar todas ({{ aceptables|length }})</button>
+    </form>
+    {% endif %}
+</section>
+{% if error_ia and not error_control %}<p class="mensaje mensaje-error" role="alert">{{ error_ia }}</p>{% endif %}
+{% if sin_propuesta %}<p class="mensaje" role="status">Claude no ha propuesto nada para {{ sin_propuesta }} control{{ 'es' if sin_propuesta != 1 }}: decídelo{{ 's' if sin_propuesta != 1 }} a mano o vuelve a proponer.</p>{% endif %}
+
+{% for bloque, controles in bloques %}
+<section class="seccion">
+    <div class="seccion-titulo"><h2>{{ bloque }}</h2>
+        <small>{{ controles|selectattr('codigo', 'in', decisiones)|list|length }} de {{ controles|length }} decididos</small></div>
+    <ol class="controles">
+        {% for r in controles %}
+        {% set d = decisiones.get(r.codigo) %}
+        {% set b = borrador if control_error == r.codigo else none %}
+        {% set guardado = ('si' if d.aplica else 'no') if d else '' %}
+        {% set elegido = b.aplica if b else guardado %}
+        {% set cambia = d and elegido and elegido != guardado %}
+        <li class="control{% if d is none %} sin-decidir{% elif d.aplica %} aplica{% else %} no-aplica{% endif %}" id="control-{{ r.codigo }}">
+            <div class="control-que">
+                <div class="control-cabeza">
+                    <a class="control-cod" href="/requisitos/{{ r.codigo }}">{{ r.codigo }}</a>
+                    <span class="sello {% if d is none %}s-gris{% elif d.aplica %}s-ok{% else %}s-acento{% endif %}">
+                        {% if d is none %}Sin decidir{% elif d.aplica %}Aplica{% else %}No aplica{% endif %}
+                    </span>
+                </div>
+                <p class="control-titulo">{{ r.titulo }}</p>
+                {% if r.cuando_aplica %}<p class="ayuda">{{ r.cuando_aplica }}</p>{% endif %}
+                {% include "_propuesta.html" %}
+            </div>
+            <form class="control-form" method="post" action="/declaracion/{{ r.codigo }}"
+                  {% if d %}data-decidido="{{ guardado }}" data-porque="{{ d.porque }}"{% endif %}
+                  hx-post="/declaracion/{{ r.codigo }}" hx-trigger="change, input delay:1500ms"
+                  hx-vals='{"auto": "1"}'
+                  hx-target="closest li" hx-select="[id='control-{{ r.codigo }}']" hx-swap="outerHTML"
+                  hx-select-oob="#declaracion-resumen">
+                {% if error and control_error == r.codigo %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+                <fieldset class="opciones">
+                    <legend class="oculto">¿Aplica {{ r.codigo }}?</legend>
+                    <label><input type="radio" name="aplica" value="si" {% if elegido == 'si' %}checked{% endif %}> Aplica</label>
+                    <label><input type="radio" name="aplica" value="no" {% if elegido == 'no' %}checked{% endif %}> No aplica</label>
+                </fieldset>
+                <label class="oculto" for="porque-{{ r.codigo }}">Por qué</label>
+                <textarea id="porque-{{ r.codigo }}" name="porque" rows="2" placeholder="Por qué…">{{ b.porque if b else (d.porque if d else '') }}</textarea>
+                {% if d %}
+                <p class="sub control-cambio" {% if not cambia %}hidden{% endif %}>
+                    Porqué anterior: «{{ d.porque }}». Escribe el nuevo: queda apuntado en Cambios como motivo del cambio.
+                </p>
+                {% endif %}
+                {% set u = ultimo.get(r.codigo) %}
+                {% if u %}<p class="sub">Último cambio, el {{ u.fecha[8:10] }}/{{ u.fecha[5:7] }}/{{ u.fecha[:4] }}: {{ u.antes }} → {{ u.ahora }} · {{ u.motivo }}</p>{% endif %}
+                <div class="control-pie">
+                    {% if d %}<span class="sub">Decidido el {{ d.fecha|fecha }}</span>{% endif %}
+                    <span id="guardado-{{ r.codigo }}" role="status"
+                          class="guardado-estado{% if (aviso_control == r.codigo and (aviso_tipo or 'falta') == 'falta') or (guardado_control == r.codigo and aviso_carpeta) %} guardado-falta{% elif aviso_control == r.codigo and aviso_tipo == 'pista' %} guardado-pista{% endif %}"
+                          {% if aviso_control == r.codigo %}hx-swap-oob="outerHTML:[id='guardado-{{ r.codigo }}']"{% endif %}>
+                        {%- if aviso_control == r.codigo %}{{ aviso }}{% elif guardado_control == r.codigo %}{{ aviso_carpeta or 'Guardado' }}{% endif -%}
+                    </span>
+                    <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+                </div>
+            </form>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{% endfor %}
+
+{% elif pestaña == 'cambios' %}
+<p class="ayuda ayuda-arriba">Cada decisión y cada cambio de la Declaración, con su fecha y su motivo. El más reciente, arriba.</p>
+{% if cambios %}
+<ol class="cambios">
+    {% for c in cambios %}
+    <li class="cambio">
+        <time>{{ c.fecha[8:10] }}/{{ c.fecha[5:7] }}/{{ c.fecha[:4] }}</time>
+        <a class="control-cod" href="/declaracion#control-{{ c.control }}">{{ c.control }}</a>
+        <span class="cambio-paso">{{ c.antes }} → <strong>{{ c.ahora }}</strong></span>
+        <span class="cambio-motivo">{{ c.motivo }}{% if c.quien %} <span class="sub">· {{ c.quien }}</span>{% endif %}</span>
+    </li>
+    {% endfor %}
+</ol>
+{% else %}
+<p class="vacio">Aún no se ha decidido ningún control.</p>
+{% endif %}
+
+{% else %}
+{% set sin = filas|selectattr('aplica', 'equalto', 'Sin decidir')|list|length %}
+{% if guardado %}
+<p class="mensaje" role="status">Guardado como «{{ guardado }}» en las pruebas de la <a href="/requisitos/6.1.3#6.1.3.c">6.1.3.c</a>. Si había una versión anterior, ha pasado a versiones anteriores.</p>
+{% endif %}
+{% if sin %}
+<p class="mensaje mensaje-aviso">Quedan {{ sin }} control{{ 'es' if sin != 1 }} sin decidir: el documento saldrá con ellos como pendientes.</p>
+{% endif %}
+<form class="alta documento-acciones" method="get" action="/declaracion/documento/descargar">
+    <label class="alta-titulo" for="formato">El documento</label>
+    <select id="formato" name="formato">
+        <option value="word">Word (.docx)</option>
+        <option value="pdf">PDF</option>
+    </select>
+    <button class="boton" type="submit">Descargar</button>
+    <button class="boton boton-acento" type="submit" formmethod="post" formaction="/declaracion/documento/guardar">Guardar como prueba</button>
+    <span class="sub">Descargar no guarda nada; «Guardar como prueba» lo deja en la 6.1.3.c.</span>
+</form>
+
+<section class="seccion">
+    <div class="seccion-titulo"><h2>Así sale el documento</h2><small>{{ espacio.nombre }} · {{ hoy|fecha }}</small></div>
+    <div class="tabla-envoltorio">
+        <table class="tabla tabla-da">
+            <thead><tr><th>Control</th><th>Título</th><th>¿Aplica?</th><th>Por qué</th><th>Decidido el</th></tr></thead>
+            <tbody>
+                {% for f in filas %}
+                <tr class="fila{% if f.aplica == 'Sin decidir' %} fila-pendiente{% endif %}">
+                    <td class="col-cod">{{ f.codigo }}</td><td>{{ f.titulo }}</td><td>{{ f.aplica }}</td><td>{{ f.porque }}</td><td>{{ f.fecha }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+</div>
+{% endblock %}

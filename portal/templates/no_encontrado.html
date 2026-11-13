@@ -1,0 +1,14 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}No encontrado · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<header class="saludo">
+    <div>
+        <p class="antetitulo">No encontrado</p>
+        <h1 class="titular">{% if codigo %}No hay ningún requisito <em>«{{ codigo }}»</em>.{% else %}Esta página <em>no existe</em>.{% endif %}</h1>
+        <p>Prueba con el buscador de arriba (Ctrl K) o vuelve a la lista.</p>
+    </div>
+    <a class="boton boton-acento" href="/requisitos">Ir a los requisitos →</a>
+</header>
+{% endblock %}

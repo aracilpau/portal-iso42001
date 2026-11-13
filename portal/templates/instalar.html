@@ -1,0 +1,41 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Instalación · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# La primera vez que se arranca el portal: primero se explican los dos modos y luego se elige #}
+<div class="entrada entrada-ancha">
+    <header>
+        <p class="antetitulo">Instalación · paso 1: elegir cómo lo vas a usar</p>
+        <h1 class="titular">Bienvenido al portal ISO/IEC 42001</h1>
+    </header>
+    <p>Antes de empezar, elige cómo lo vas a usar. Las dos formas tienen el mismo portal; cambia dónde se guardan los datos
+        y quién puede entrar.</p>
+    <div class="modos">
+        <form method="post" action="/instalar/modo" class="modo">
+            <input type="hidden" name="modo" value="local">
+            <h2>Solo en este ordenador</h2>
+            <ul>
+                <li><strong>Dónde están los datos:</strong> en una carpeta de este ordenador.</li>
+                <li><strong>Qué hay que instalar:</strong> nada más.</li>
+                <li><strong>Quién entra:</strong> quien use este ordenador.</li>
+            </ul>
+            <p class="ayuda">Para empezar, o si lo llevas tú solo.</p>
+            <span><button class="boton boton-acento" type="submit">Usarlo solo en este ordenador</button></span>
+        </form>
+        <form method="post" action="/instalar/modo" class="modo">
+            <input type="hidden" name="modo" value="compartido">
+            <h2>Compartido con mi equipo</h2>
+            <ul>
+                <li><strong>Dónde están los datos:</strong> en una base de datos MySQL; los archivos, en una carpeta
+                    compartida (de Teams, SharePoint o de red).</li>
+                <li><strong>Qué hay que instalar:</strong> el MySQL, una vez para todo el equipo (lo explica el
+                    manual <code>docs\instalar.md</code>, en la carpeta del programa, en «El MySQL: qué pedir»).</li>
+                <li><strong>Quién entra:</strong> todo el equipo, cada uno desde su ordenador y con su cuenta.</li>
+            </ul>
+            <p class="ayuda">Si tu equipo ya lo usa, elige este: tendrás que escribir los datos de su MySQL.</p>
+            <span><button class="boton boton-acento" type="submit">Compartirlo con mi equipo</button></span>
+        </form>
+    </div>
+</div>
+{% endblock %}

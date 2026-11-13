@@ -1,0 +1,92 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% from "_empresa.html" import bloque_abiertas, estado %}
+{% block titulo %}Empresa · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# El cuestionario de la empresa, todo junto. Cada respuesta se guarda sola. #}
+<div id="empresa">
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Cuestionario</p>
+        <h1 class="titular">Empresa</h1>
+        <p class="bajada">Cómo es la empresa y cómo usa la IA. Con esto se decide la Declaración y se redactan los borradores.
+            Contesta en llano, como se lo contarías a un compañero; se guarda solo. {{ estado(perfil) }}</p>
+    </div>
+    <nav class="filtros" aria-label="Partes de Empresa">
+        <a href="/empresa" {% if seccion == 'empresa' %}class="on" aria-current="page"{% endif %}>Cuestionario</a>
+        <a href="/inventario" {% if seccion == 'inventario' %}class="on" aria-current="page"{% endif %}>Sistemas de IA</a>
+    </nav>
+</header>
+
+{% if reabiertos %}
+<p class="mensaje" role="status">{% if reabiertos == 'nada' %}No se ha reabierto nada.{% else %}Reabierto: {{ reabiertos }}. Sus puntos vuelven a pendiente.{% endif %}</p>
+{% endif %}
+
+<section class="empresa-bloque" id="datos-generales">
+    <h2>Datos generales</h2>
+    <div class="cuestionario-datos">
+        {% for clave, titulo, ejemplo in datos_empresa %}
+        <form class="campo" method="post" action="/empresa/respuesta/{{ clave }}"
+              hx-post="/empresa/respuesta/{{ clave }}" hx-trigger="change" hx-swap="none">
+            <label for="empresa-{{ clave }}">{{ titulo }}</label>
+            <input id="empresa-{{ clave }}" name="valor" type="text" value="{{ perfil.datos[clave] }}" placeholder="Ej.: {{ ejemplo }}">
+            <span id="nota-{{ clave }}" class="cuestionario-nota"></span>
+        </form>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="empresa-bloque" id="cuestionario">
+    <h2>Cómo es vuestra IA</h2>
+    <p class="ayuda">Deciden qué controles de la <a href="/declaracion">Declaración</a> aplican.</p>
+    <ol class="cuestionario-preguntas">
+        {% for q in preguntas %}
+        {% set valor = perfil.respuestas[q.clave] %}
+        <li id="pregunta-{{ q.clave }}">
+            <form class="cuestionario-pregunta" method="post" action="/empresa/respuesta/{{ q.clave }}"
+                  hx-post="/empresa/respuesta/{{ q.clave }}" hx-trigger="change" hx-swap="none">
+                <span class="cuestionario-num">{{ loop.index }}</span>
+                <span class="cuestionario-texto" data-info="Decide {{ q.controles|join(', ') }}">{{ q.texto }}</span>
+                <span class="opciones" role="radiogroup" aria-label="{{ q.texto }}">
+                    {% for v, texto in respuestas_posibles.items() %}
+                    <label><input type="radio" name="valor" value="{{ v }}" {% if valor == v %}checked{% endif %}> {{ texto }}</label>
+                    {% endfor %}
+                </span>
+                <span id="nota-{{ q.clave }}" class="cuestionario-nota">{% if q.clave in perfil.sugerencias %}{{ perfil.sugerencias[q.clave][1] }}{% endif %}</span>
+                <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+            </form>
+            <div id="reabrir-{{ q.clave }}"></div>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+
+{% for b, titulo in bloques.items() %}
+{{ bloque_abiertas(b, titulo, abiertas, perfil) }}
+{% endfor %}
+
+{# Lo que la IA dijo que le faltaba al hacer un borrador: contestado, lo usan todos los borradores #}
+<section class="empresa-bloque" id="de-la-ia">
+    <h2>Lo que pregunta la IA</h2>
+    {% if perfil.de_la_ia %}
+    <p class="ayuda">Al hacer un borrador, la IA apunta aquí lo que le falta saber. Lo que contestes lo usan todos los
+        borradores que hagas después.</p>
+    <ol class="abiertas">
+        {% for f in perfil.de_la_ia %}
+        <li id="pregunta-ia-{{ f.id }}">
+            <form class="abierta" method="post" action="/empresa/pregunta-ia/{{ f.id }}"
+                  hx-post="/empresa/pregunta-ia/{{ f.id }}" hx-trigger="change" hx-swap="none">
+                <label class="abierta-texto" for="ia-{{ f.id }}">{{ f.texto }} <span class="sub">· del borrador «{{ f.documento }}»</span></label>
+                <textarea id="ia-{{ f.id }}" name="valor" rows="2">{{ f.respuesta }}</textarea>
+                <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+            </form>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <p class="ayuda">Aún nada. Al hacer un borrador con IA, aquí sale lo que le falte saber.</p>
+    {% endif %}
+</section>
+</div>
+{% endblock %}

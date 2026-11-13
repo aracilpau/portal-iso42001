@@ -1,0 +1,41 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Ha pasado algo · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<div id="eventos">
+<p class="miga"><a href="/">Inicio</a> / Ha pasado algo</p>
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Requisitos por evento</p>
+        <h1 class="titular">¿Ha pasado algo?</h1>
+        <p class="bajada">Hay requisitos que no vencen por fecha: hay que volver a ellos cuando pasa algo. Elige qué ha
+            pasado y te digo qué requisitos tocan; los que reabras vuelven a pendiente hasta que los revises.</p>
+    </div>
+</header>
+
+{% if hecha %}
+<p class="mensaje" role="status">
+    {% if reabiertos %}<strong>{{ hecha.titulo }}:</strong> reabiertos {{ reabiertos }}. Sus puntos vuelven a pendiente.
+    {% else %}<strong>{{ hecha.titulo }}:</strong> no se ha reabierto nada.{% endif %}
+    <a href="/">Volver a Inicio</a>
+</p>
+{% endif %}
+
+<ol class="situaciones-grandes">
+    {% for s in situaciones %}
+    <li><a href="/eventos/{{ s.clave }}">
+        <span class="situacion-titulo">{{ s.titulo }}</span>
+        <span class="ayuda">{{ s.cuando }}</span>
+        <span class="situacion-ir">Elegir →</span>
+    </a></li>
+    {% endfor %}
+</ol>
+
+<p class="ayuda ayuda-abajo">
+    {% if proxima %}El portal te preguntará si ha pasado algo cada {{ cada }} mes{{ 'es' if cada > 1 }}; la próxima vez,
+    el {{ proxima|fecha }}.{% else %}El portal no pregunta si ha pasado algo.{% endif %}
+    Se cambia en <a href="/ajustes#preguntar">Ajustes</a>.
+</p>
+</div>
+{% endblock %}

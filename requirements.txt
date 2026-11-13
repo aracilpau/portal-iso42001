@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+jinja2
+openpyxl
+pytest
+httpx2
+python-multipart
+python-docx
+fpdf2
+claude-agent-sdk
+pypdf
+pywin32
+winotify
+pymysql>=2.2.8

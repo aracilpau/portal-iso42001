@@ -1,0 +1,30 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# Trozos de la página «Empresa»: los usan la página y la respuesta que se guarda sola #}
+
+{# Un bloque de preguntas abiertas. El de «Si desarrolláis IA» se esconde si la empresa ha dicho que no. #}
+{% macro bloque_abiertas(b, titulo, abiertas, perfil, oob=False) -%}
+<section class="empresa-bloque" id="bloque-{{ b }}" {% if b == SOLO_SI_DESARROLLA and perfil.respuestas.desarrolla == 'no' %}hidden{% endif %}
+         {% if oob %}hx-swap-oob="true"{% endif %}>
+    <h2>{{ b }} · {{ titulo }}</h2>
+    {% if b == SOLO_SI_DESARROLLA %}<p class="ayuda">Sale porque no habéis contestado «No» a si desarrolláis IA.</p>{% endif %}
+    <ol class="abiertas">
+        {% for q in abiertas if q.bloque == b %}
+        <li id="pregunta-{{ q.clave }}">
+            <form class="abierta" method="post" action="/empresa/respuesta/{{ q.clave }}"
+                  hx-post="/empresa/respuesta/{{ q.clave }}" hx-trigger="change" hx-swap="none">
+                <label class="abierta-texto" for="abierta-{{ q.clave }}" data-info="La usan sobre todo {{ q.requisitos|map(attribute='codigo')|join(', ') }}">{{ q.texto }}</label>
+                <textarea id="abierta-{{ q.clave }}" name="valor" rows="2" placeholder="Ej.: {{ q.ejemplo }}">{{ perfil.abiertas[q.clave] }}</textarea>
+                <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
+            </form>
+            <div id="reabrir-{{ q.clave }}"></div>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{%- endmacro %}
+
+{# Lo que queda por aclarar, arriba de la página #}
+{% macro estado(perfil, hora=None, oob=False) -%}
+<span id="cuestionario-estado" class="guardado-estado" role="status" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {%- if hora %}Guardado a las {{ hora.strftime('%H:%M') }} · {% endif %}{{ perfil.todas_hechas }} de {{ perfil.todas_total }} aclaradas</span>
+{%- endmacro %}

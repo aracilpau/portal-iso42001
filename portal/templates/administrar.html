@@ -1,0 +1,172 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+
+{% block titulo %}Administrar · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# Cuentas y empresas desde el portal, solo para el administrador. Borrar empresas sigue con
+   scripts\cuentas.py: se lleva todos sus datos #}
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Administrar</p>
+        <h1 class="titular">Cuentas y empresas</h1>
+        <p class="bajada">Quién puede entrar en el portal y en qué empresas. Solo lo ven los administradores: pueden crear
+            cuentas y empresas y cambiar las contraseñas de los demás.</p>
+    </div>
+</header>
+
+{% if hecho and not donde %}<p class="mensaje" role="status">{{ hecho }}</p>{% endif %}
+{% if error and not ancla %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="seccion" id="cuentas">
+    <div class="seccion-titulo"><h2>Cuentas</h2><small>{{ filas|length }} en total</small></div>
+    <ul class="cuentas-admin">
+        {% for f in filas %}
+        {% set u = f.u %}
+        <li class="caja cuenta-admin{% if not u.activo %} cuenta-quitada{% endif %}" id="cuenta-{{ u.id }}">
+            {% if hecho and donde == 'cuenta-' ~ u.id %}<p class="mensaje" role="status">{{ hecho }}</p>{% endif %}
+            {% if error and ancla == 'cuenta-' ~ u.id %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+            <div class="cuenta-cabeza">
+                <div>
+                    <strong>{{ u.nombre }}</strong>{% if u.id == yo %} <span class="sub">(tú)</span>{% endif %}
+                    <div class="sub">{{ u.correo }}</div>
+                </div>
+                <div class="cuenta-etiquetas">
+                    {% if f.admin %}<span class="etq etq-reco">Administrador</span>{% endif %}
+                    {% if not u.activo %}<span class="etq">No puede entrar</span>{% endif %}
+                </div>
+            </div>
+
+            {% if u.activo %}
+            <form class="cuenta-empresas" method="post" action="/administrar/cuenta/{{ u.id }}/empresas">
+                <span class="etiqueta-campo">Entra en</span>
+                {% for e in empresas %}
+                <label><input type="checkbox" name="empresas" value="{{ e.slug }}" {% if e.slug in f.suyas %}checked{% endif %}> {{ e.nombre }}</label>
+                {% else %}
+                <span class="sub">Aún no hay empresas: créalas abajo.</span>
+                {% endfor %}
+                {% for e in de_todos %}<span class="sub">· {{ e.nombre }} (espacio común: entran todas las cuentas)</span>{% endfor %}
+                {% if empresas %}<button class="boton boton-mini" type="submit">Guardar empresas</button>{% endif %}
+            </form>
+            {% if empresas and not f.suyas %}<p class="sub">Todavía no entra en ninguna empresa: márcalas y pulsa «Guardar empresas».</p>{% endif %}
+            {% else %}
+            <p class="sub">No puede entrar. Las cuentas quitadas se quedan en la lista para que se vea quién hizo qué.</p>
+            {% endif %}
+
+            <div class="cuenta-acciones">
+                {% if u.activo %}
+                <details>
+                    <summary class="boton boton-mini">Cambiar contraseña</summary>
+                    <form class="fila-form" method="post" action="/administrar/cuenta/{{ u.id }}/clave">
+                        <label class="etiqueta-campo" for="clave-{{ u.id }}">Contraseña nueva de {{ u.nombre }}</label>
+                        <span class="con-ver"><input id="clave-{{ u.id }}" name="clave" type="password" autocomplete="new-password" minlength="8" required>
+                            <button class="boton boton-mini" type="button" data-ver="clave-{{ u.id }}" aria-pressed="false">Ver</button></span>
+                        <button class="boton boton-mini boton-acento" type="submit">Cambiar</button>
+                    </form>
+                </details>
+                {% endif %}
+                {% if u.id == yo %}
+                {# Quitarse a uno mismo: con confirmación (el envío va sin «si», así que quita). Si es el único
+                   administrador, el portal no lo deja y lo dice #}
+                <button class="boton boton-mini" type="button"
+                        data-confirmar="/administrar/cuenta/{{ u.id }}/administrador" data-titulo="¿Dejar de ser administrador?"
+                        data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Dejar de serlo"
+                        data-ayuda="Dejarás de ver «Administrar». Para volver a serlo, te tendrá que nombrar otro administrador.">Quitar de administrador</button>
+                <button class="boton boton-mini boton-peligro" type="button" data-peligro
+                        data-confirmar="/administrar/cuenta/{{ u.id }}/entra" data-titulo="¿Quitar tu propia cuenta?"
+                        data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Quitar mi cuenta"
+                        data-ayuda="Saldrás del portal y ya no podrás entrar. Lo que hiciste se queda en «Actividad». Para volver, otro administrador te tendrá que «Volver a dejar entrar».">Quitar</button>
+                {% else %}
+                {% if u.activo %}
+                {# Dar o quitar el permiso, con confirmación, que dice qué cambia #}
+                {% if f.admin %}
+                <button class="boton boton-mini" type="button" data-si="0"
+                        data-confirmar="/administrar/cuenta/{{ u.id }}/administrador" data-titulo="¿Quitar de administrador?"
+                        data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Quitar de administrador"
+                        data-ayuda="Dejará de ver «Administrar»: ya no podrá crear cuentas ni empresas ni cambiar contraseñas de otros. Seguirá entrando en sus empresas.">Quitar de administrador</button>
+                {% else %}
+                <button class="boton boton-mini" type="button" data-si="1"
+                        data-confirmar="/administrar/cuenta/{{ u.id }}/administrador" data-titulo="¿Hacer administrador?"
+                        data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Hacer administrador"
+                        data-ayuda="Podrá crear cuentas y empresas, cambiar las contraseñas de otros y quitar cuentas, también la tuya.">Hacer administrador</button>
+                {% endif %}
+                {# Pide confirmación en la ventana del portal; el envío va sin «si», así que quita #}
+                <button class="boton boton-mini boton-peligro" type="button" data-peligro
+                        data-confirmar="/administrar/cuenta/{{ u.id }}/entra" data-titulo="¿Quitar esta cuenta?"
+                        data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Quitar la cuenta"
+                        data-ayuda="Dejará de poder entrar, aunque tenga el portal abierto. Lo que hizo se queda en «Actividad» y se puede deshacer con «Volver a dejar entrar».">Quitar</button>
+                {% else %}
+                <form method="post" action="/administrar/cuenta/{{ u.id }}/entra">
+                    <input type="hidden" name="si" value="1">
+                    <button class="boton boton-mini" type="submit">Volver a dejar entrar</button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="seccion" id="nueva-cuenta">
+    <div class="seccion-titulo"><h2>Nueva cuenta</h2></div>
+    {% if error and ancla == 'nueva-cuenta' %}<p class="mensaje mensaje-error" role="alert">{{ error }} Vuelve a escribir la contraseña.</p>{% endif %}
+    <form class="caja nueva-admin" method="post" action="/administrar/cuenta">
+        <div class="campo"><label for="n-nombre">Nombre</label>
+            <input id="n-nombre" name="nombre" type="text" value="{{ nueva.nombre or '' }}" required></div>
+        <div class="campo"><label for="n-correo">Correo</label>
+            <input id="n-correo" name="correo" type="email" value="{{ nueva.correo or '' }}" autocomplete="off" required></div>
+        <div class="campo"><label for="n-clave">Contraseña</label>
+            <span class="con-ver"><input id="n-clave" name="clave" type="password" autocomplete="new-password" minlength="8" required>
+                <button class="boton boton-mini" type="button" data-ver="n-clave" aria-pressed="false">Ver</button></span>
+            <span class="sub">Al menos 8 caracteres. Pásasela a la persona; luego puede cambiarla.</span></div>
+        {% if empresas %}
+        <fieldset class="cuenta-empresas">
+            <legend class="etiqueta-campo">Entra en</legend>
+            {% for e in empresas %}
+            <label><input type="checkbox" name="empresas" value="{{ e.slug }}" {% if e.slug in (nueva.empresas or []) %}checked{% endif %}> {{ e.nombre }}</label>
+            {% endfor %}
+        </fieldset>
+        {% endif %}
+        <span><button class="boton boton-acento" type="submit">Crear cuenta</button></span>
+    </form>
+</section>
+
+<section class="seccion" id="empresas">
+    <div class="seccion-titulo"><h2>Empresas</h2><small>Borrar una empresa no se hace desde aquí: lo explica el manual
+        <code>docs\instalar.md</code></small></div>
+    <div class="caja">
+        {% if hecho and donde == 'empresas' %}<p class="mensaje" role="status">{{ hecho }}</p>{% endif %}
+        {% if error and ancla == 'empresas' %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+        <ul class="lista-empresas-admin">
+            {% for e in empresas + de_todos %}
+            <li><strong>{{ e.nombre }}</strong> <span class="sub">{% if e.todos %}espacio común: entran todas las cuentas · {% endif %}sus archivos, en la carpeta «{{ e.slug }}»</span>
+                {# Cambiar el nombre: el campo va fuera de un formulario, para que Intro no lo cambie sin preguntar #}
+                <details>
+                    <summary class="boton boton-mini">Cambiar nombre</summary>
+                    <span class="fila-form">
+                        <label class="etiqueta-campo" for="nombre-{{ e.slug }}">Nombre nuevo</label>
+                        <input id="nombre-{{ e.slug }}" name="nombre" type="text" value="{{ e.nombre }}" required>
+                        <button class="boton boton-mini boton-acento" type="button" data-campo="nombre-{{ e.slug }}"
+                                data-confirmar="/administrar/empresa/{{ e.slug }}/nombre" data-titulo="¿Cambiar el nombre de la empresa?"
+                                data-nombre="«{{ e.nombre }}» pasará a llamarse «{valor}»." data-accion="Cambiar el nombre"
+                                data-ayuda="Solo cambia el nombre que se ve en el portal. Sus datos no cambian y la carpeta de sus archivos sigue siendo «{{ e.slug }}».">Cambiar</button>
+                    </span>
+                </details>
+            </li>
+            {% else %}
+            <li class="sub">Aún no hay ninguna.</li>
+            {% endfor %}
+        </ul>
+        <form class="fila-form" method="post" action="/administrar/empresa">
+            <label class="etiqueta-campo" for="e-nombre">Nueva empresa</label>
+            <input id="e-nombre" name="nombre" type="text" placeholder="Ej.: Ejemplo S.L." required>
+            <button class="boton boton-acento" type="submit">Crear empresa</button>
+        </form>
+    </div>
+</section>
+{% if error and ancla %}
+{# El error sale junto a lo que lo causó: la página baja hasta allí #}
+<script>document.getElementById("{{ ancla }}")?.scrollIntoView({block: "start"});</script>
+{% endif %}
+{% endblock %}

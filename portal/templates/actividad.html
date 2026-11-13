@@ -1,0 +1,60 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Actividad · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<div id="actividad">
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Registro</p>
+        <h1 class="titular">Actividad</h1>
+        <p class="bajada">Todo lo que se ha hecho en el portal con los puntos, los archivos, el inventario y la Declaración, lo
+            más reciente arriba, y quién lo hizo. Lo que se mete directamente en las carpetas desde el Explorador no sale aquí.</p>
+    </div>
+    {% if requisitos or personas %}
+    <form class="filtro-select" method="get" action="/actividad">
+        {% if personas %}
+        <label class="etiqueta-campo" for="persona">Quién</label>
+        <select id="persona" name="persona" onchange="this.form.submit()">
+            <option value="" {% if not persona %}selected{% endif %}>Todos</option>
+            {% for x in personas %}
+            <option value="{{ x }}" {% if persona == x %}selected{% endif %}>{{ x }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+        <label class="etiqueta-campo" for="requisito">Ver</label>
+        <select id="requisito" name="requisito" onchange="this.form.submit()">
+            <option value="" {% if not elegido %}selected{% endif %}>Todos los requisitos</option>
+            {% for r in requisitos %}
+            <option value="{{ r.codigo }}" {% if elegido == r.codigo %}selected{% endif %}>{{ r.codigo }} {{ r.titulo }}</option>
+            {% endfor %}
+        </select>
+        <noscript><button class="boton boton-mini" type="submit">Ver</button></noscript>
+    </form>
+    {% endif %}
+</header>
+
+{% if filas %}
+<ol class="registro">
+    {% set ns = namespace(dia='') %}
+    {% for f in filas %}
+    {% if f.cuando[:10] != ns.dia %}{% set ns.dia = f.cuando[:10] %}
+    <li class="registro-dia">{{ f.cuando[8:10] }}/{{ f.cuando[5:7] }}/{{ f.cuando[:4] }}</li>
+    {% endif %}
+    <li class="registro-fila">
+        <time>{{ f.cuando[11:16] }}</time>
+        <span class="registro-donde">
+            {% if f.punto %}<a class="mono" href="/requisitos/{{ f.requisito }}#{{ f.punto }}">{{ f.punto }}</a>
+            {% elif f.requisito %}<a class="mono" href="/requisitos/{{ f.requisito }}">{{ f.requisito }}</a>{% endif %}
+            {% if f.sistema %}{% if f.requisito %}<strong>{{ f.sistema }}</strong>{% else %}<a href="/inventario">{{ f.sistema }}</a>{% endif %}{% endif %}
+        </span>
+        <span class="registro-que">{{ acciones.get(f.accion, f.accion) }}{% if f.detalle %} <span class="sub">· {{ f.detalle }}</span>{% endif %}</span>
+        <span class="registro-quien">{{ f.quien }}</span>
+    </li>
+    {% endfor %}
+</ol>
+{% else %}
+<p class="vacio">Aún no hay actividad{% if elegido %} en este requisito{% endif %}{% if persona %} de {{ persona }}{% endif %}.</p>
+{% endif %}
+</div>
+{% endblock %}

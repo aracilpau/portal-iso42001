@@ -1,0 +1,38 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Carpeta de los archivos · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# El portal compartido guarda las pruebas en la carpeta que elige cada ordenador. Sale la primera vez y
+   si la elegida deja de estar. También es un paso de la instalación #}
+<div class="entrada">
+    <header>
+        <p class="antetitulo">{% if instalacion %}Instalación · paso 3 de {{ pasos }}{% else %}Portal ISO/IEC 42001{% endif %}</p>
+        <h1 class="titular">¿Dónde se guardan los archivos de pruebas?</h1>
+    </header>
+    {% if perdida %}
+    <p class="mensaje mensaje-aviso" role="alert">No se encuentra la carpeta elegida, «{{ perdida }}». Puede que se haya
+        movido, que se haya dejado de sincronizar o que la unidad no esté conectada. Si vuelve a estar, pulsa «Usar esta
+        carpeta»; si no, elige dónde está ahora.</p>
+    {% endif %}
+    <p>El portal guarda los archivos de pruebas (las evidencias de cada requisito) en una carpeta compartida, para que
+        todo el equipo vea los mismos: por ejemplo, una de Teams o SharePoint sincronizada con OneDrive, o una carpeta de
+        red.</p>
+    <p><strong>Vale para todas las empresas:</strong> dentro, el portal tiene una carpeta para cada una{% if suyas %}
+        (las tuyas: {% for s in suyas %}<code>{{ s }}</code>{% if not loop.last %}, {% endif %}{% endfor %}){% endif %}.
+        Elige la carpeta general del equipo para la ISO (por ejemplo, «ISO 42001»), no la de una empresa.</p>
+    {% if equipo %}
+    <p class="mensaje" role="status">Tu equipo ya usa el portal: este es el último paso. Después entrarás con tu cuenta,
+        sin crear nada. Elige la misma carpeta que tus compañeros; si no sabes cuál es, pregúntalo.</p>
+    {% endif %}
+    <p class="ayuda">Se elige una vez en cada ordenador; todos tienen que elegir la misma.</p>
+    {% if instalacion %}
+    {% with accion="/instalar/carpeta", examinar_url="/instalar/examinar", boton="Siguiente" %}
+    {% include "_carpeta.html" %}
+    {% endwith %}
+    <p class="ayuda"><a href="/instalar">← Volver a elegir el modo</a></p>
+    {% else %}
+    {% include "_carpeta.html" %}
+    {% endif %}
+</div>
+{% endblock %}

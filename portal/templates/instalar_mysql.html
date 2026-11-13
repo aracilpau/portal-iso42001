@@ -1,0 +1,58 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Instalación · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# Compartido: los datos del MySQL. Con ellos se escribe secretos.env, sin tocarlo a mano #}
+<div class="entrada">
+    <header>
+        {% if cambio %}
+        <p class="antetitulo">Portal ISO/IEC 42001</p>
+        <h1 class="titular">Cambiar los datos del MySQL</h1>
+        {% else %}
+        <p class="antetitulo">Instalación · paso 2 de {{ pasos }}</p>
+        <h1 class="titular">¿Cuál es vuestro MySQL?</h1>
+        {% endif %}
+    </header>
+    {% if cambio %}
+    <p>Escribe los datos nuevos, por ejemplo si tu equipo ha cambiado la contraseña del MySQL. Vienen los de ahora, salvo
+        la contraseña. Te los da quien administra el portal. <strong>No son tu correo ni tu contraseña del portal.</strong></p>
+    <p class="ayuda">No se pierde nada: los datos del portal están en el MySQL, no en este ordenador.</p>
+    {% else %}
+    <p>Los datos para conectar con la base de datos del equipo. Te los da quien montó el MySQL o, si tu equipo ya usa el
+        portal, quien lo administra. <strong>No son tu correo ni tu contraseña del portal.</strong></p>
+    <p class="ayuda">Si eres el primero del equipo, lo que hay que pedir está en el manual <code>docs\instalar.md</code>, en
+        la carpeta del programa, en «El MySQL: qué pedir».</p>
+    {% endif %}
+    {% if error %}<p class="mensaje mensaje-error" role="alert">{{ error }} Vuelve a escribir la contraseña del MySQL.</p>{% endif %}
+    <form method="post" action="/instalar/mysql" id="form-mysql">
+        <label class="etiqueta-campo" for="host">Dirección del servidor</label>
+        <input id="host" name="host" type="text" value="{{ v.host or '' }}" placeholder="Ej.: mibase.eu-west-1.rds.amazonaws.com"
+               autocomplete="off" spellcheck="false" required autofocus>
+        <label class="etiqueta-campo" for="puerto">Puerto</label>
+        <input id="puerto" name="puerto" type="text" inputmode="numeric" value="{{ v.puerto or '3306' }}">
+        <label class="etiqueta-campo" for="usuario">Usuario del MySQL</label>
+        <input id="usuario" name="usuario" type="text" value="{{ v.usuario or '' }}" autocomplete="off" spellcheck="false" required>
+        <label class="etiqueta-campo" for="clave">Contraseña del MySQL</label>
+        <input id="clave" name="clave" type="password" autocomplete="new-password" required>
+        <label class="etiqueta-campo" for="base">Base de datos</label>
+        <input id="base" name="base" type="text" value="{{ v.base or 'iso42001' }}" autocomplete="off" spellcheck="false" required>
+        <div id="resultado-prueba" aria-live="polite"></div>
+        <p id="probando" class="ayuda htmx-indicator">Probando… puede tardar unos segundos.</p>
+        <span class="botones-carpeta">
+            <button class="boton" type="button" hx-post="/instalar/mysql/probar" hx-include="#form-mysql"
+                    hx-target="#resultado-prueba" hx-disabled-elt="this"
+                    hx-indicator="#probando">Probar conexión</button>
+            <button class="boton boton-acento" type="submit">{% if cambio %}Guardar y entrar{% else %}Siguiente{% endif %}</button>
+        </span>
+    </form>
+    <p class="ayuda">Se guardan en este ordenador, en un archivo que solo usa el portal (<code>secretos.env</code>, en los
+        ajustes de tu usuario de Windows). Quien tenga estos datos puede entrar en la base de datos: no los compartas
+        fuera del equipo.</p>
+    {% if cambio %}
+    <form method="post" action="/instalar/cancelar"><button class="boton boton-mini" type="submit">← Dejarlo como estaba</button></form>
+    {% else %}
+    <p class="ayuda"><a href="/instalar">← Volver a elegir el modo</a></p>
+    {% endif %}
+</div>
+{% endblock %}

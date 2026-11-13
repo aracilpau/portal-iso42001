@@ -1,0 +1,46 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# «Revisar con IA» y la última revisión de la IA de un punto o de la línea de un sistema.
+   Recibe rv_punto, rv_sid (0 si no es de un sistema), rv_url (la del punto o la línea), rv_ancla y rv_hay (sus archivos). #}
+{% set rev = revisiones.get((rv_punto, rv_sid)) %}
+{% if rv_hay or rev or (revision_error and revision_ancla == rv_ancla) %}
+{% set antigua = rev and huellas.get((rv_punto, rv_sid)) != rev.huella %}
+<div class="revision" id="revision-{{ rv_ancla }}">
+    {% if rv_hay %}
+    <form class="revision-pedir" method="post" action="{{ rv_url }}/revisar" hx-post="{{ rv_url }}/revisar"
+          hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML" hx-disabled-elt="find button">
+        <button class="{{ clase_boton_revisar }}" type="submit" {% if not ia_disponible %}disabled{% endif %}
+                title="{% if ia_disponible %}La IA lee los archivos y dice si con ellos se cumple el punto. No marca nada.{% else %}Claude no está disponible en este ordenador{% endif %}">
+            <span class="sin-pensar">{% if rev %}Volver a revisar{% else %}Revisar con IA{% endif %}</span>
+            <span class="pensando">Revisando… (puede tardar un minuto)</span>
+        </button>
+    </form>
+    {% endif %}
+    {% if revision_error and revision_ancla == rv_ancla %}<p class="mensaje mensaje-error" role="alert">{{ revision_error }}</p>{% endif %}
+    {% if rev %}
+    <div class="revision-caja revision-{{ rev.veredicto }}{% if antigua %} revision-antigua{% endif %}">
+        {% if antigua %}
+        <p class="revision-aviso" role="status">⚠ {% if rv_hay %}Esta revisión es de una versión anterior de los archivos. Pulsa «Volver a revisar» para revisar la actual.{% else %}Esta revisión es de unos archivos que ya no están.{% endif %}</p>
+        {% endif %}
+        {% set firmas_rev = firmas_revision.get('firmas.' ~ rv_punto ~ '.' ~ rv_sid) %}
+        {% if firmas_rev and not antigua %}
+        <p class="revision-aviso" role="status">⚠ Firma sin comprobar: este PDF tiene firmas de {{ firmas_rev }}, pero el portal no sabe si son válidas. Ábrelo en Adobe antes de marcar la casilla.</p>
+        {% endif %}
+        <p class="revision-veredicto">
+            {% if rev.veredicto == 'si' %}✓ SÍ{% if antigua %} en la versión anterior{% else %}, parece que cubre {{ rv_punto }}{% endif %}
+            {% elif rev.veredicto == 'no' %}✗ NO{% if antigua %} en la versión anterior{% else %}, le falta algo{% endif %}
+            {% else %}? NO SE PUEDE SABER{% if antigua %} en la versión anterior{% endif %}{% endif %}
+            <span class="revision-quien">revisión de la IA · {{ rev.creada[8:10] }}/{{ rev.creada[5:7] }}/{{ rev.creada[:4] }}</span>
+        </p>
+        <p>{{ rev.porque }}</p>
+        {% if rev.falta %}<p><strong>Le falta:</strong> {{ rev.falta }}</p>{% endif %}
+        {% if rev.apoyo %}
+        <details class="revision-detalle">
+            <summary>Ver detalle</summary>
+            <p><strong>Se apoya en:</strong> {{ rev.apoyo }}</p>
+            <p>Es una opinión de la IA: no marca nada. La casilla la decides tú.</p>
+        </details>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

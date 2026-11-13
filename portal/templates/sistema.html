@@ -1,0 +1,92 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}{{ x.nombre }} · Inventario de IA{% endblock %}
+
+{% block contenido %}
+<div id="sistema">
+<p class="miga"><a href="/inventario">Empresa · Sistemas de IA</a> / {{ x.nombre }}</p>
+
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">{{ TIPOS.get(x.tipo, '') }}{% if x.retirado %} · Retirado el {{ x.retirado|fecha }}{% endif %}</p>
+        <h1 class="titular" id="sistema-nombre" {% if auto %}hx-swap-oob="true"{% endif %}>{{ x.nombre }}</h1>
+        <p class="bajada" id="sistema-resumen" {% if auto %}hx-swap-oob="true"{% endif %}>{{ x.completos }} de {{ campos|length }} campos · guardada el {{ x.actualizado|fecha }}</p>
+    </div>
+</header>
+
+{% if x.retirado %}
+<p class="aviso-noaplica"><strong>Sistema retirado.</strong> Ya no cuenta en los puntos del inventario.</p>
+{% endif %}
+{% if error %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+{% if reabiertos %}
+<p class="mensaje" role="status">{% if reabiertos == 'nada' %}No se ha reabierto nada.{% else %}Reabiertos {{ reabiertos }}. Sus puntos
+    vuelven a pendiente.{% endif %}</p>
+{% endif %}
+{% if alta %}
+{% from "_reabrir.html" import lista_reabrir %}
+<section class="pregunta-alta">
+    <p><strong>{% if como == 'activado' %}Has vuelto a activar{% else %}Has dado de alta{% endif %} «{{ x.nombre }}».</strong>
+        Lo que va por sistema (su ficha, su evaluación de impacto, su uso previsto…) ya sale pendiente solo. Esto es de
+        toda la empresa y no se abre solo: ¿lo reabrimos para tener en cuenta este sistema?</p>
+    {{ lista_reabrir("/inventario/" ~ x.id ~ "/reabrir", alta, est, "De toda la empresa") }}
+    <form class="en-linea" method="post" action="/inventario/{{ x.id }}/no-reabrir">
+        <button class="boton" type="submit">No hace falta</button>
+        <span class="ayuda">Si sales sin contestar, la pregunta sigue en «Lo siguiente», en Inicio.</span>
+    </form>
+</section>
+{% endif %}
+
+<form class="sistema-form" method="post" action="/inventario/{{ x.id }}"
+      hx-post="/inventario/{{ x.id }}" hx-trigger="change" hx-vals='{"auto": "1"}' hx-swap="none">
+    <div class="sistema-datos">
+        <div class="campo">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" type="text" value="{{ x.nombre }}">
+        </div>
+        <fieldset class="opciones">
+            <legend class="etiqueta-campo">Tipo</legend>
+            {% for clave, texto in TIPOS.items() %}
+            <label><input type="radio" name="tipo" value="{{ clave }}" {% if x.tipo == clave %}checked{% endif %}> {{ texto }}</label>
+            {% endfor %}
+        </fieldset>
+    </div>
+
+    <ol class="campos-ficha">
+        {% for campo, titulo, punto, ayuda, ejemplo in campos %}
+        {% set lleno = x.campo(campo).strip() %}
+        <li class="campo-ficha">
+            <div class="campo-ficha-cabeza">
+                <span class="campo-num">{{ loop.index }}</span>
+                <label for="{{ campo }}">{{ titulo }}</label>
+                <a class="etq" href="/requisitos/{{ punto.rsplit('.', 1)[0] }}#{{ punto }}">cumple {{ punto }}</a>
+                <span id="estado-{{ campo }}" {% if auto %}hx-swap-oob="true"{% endif %} class="sello {% if lleno %}s-ok{% else %}s-gris{% endif %}">{% if lleno %}Hecho{% else %}Pendiente{% endif %}</span>
+            </div>
+            <p class="ayuda">{{ ayuda }}</p>
+            <textarea id="{{ campo }}" name="{{ campo }}" rows="3" placeholder="{{ ejemplo }}">{{ x.campo(campo) }}</textarea>
+        </li>
+        {% endfor %}
+    </ol>
+
+    <p class="sistema-guardado">
+        <span id="sistema-estado" {% if auto %}hx-swap-oob="true"{% endif %} role="status"
+              class="guardado-estado{% if aviso_error %} guardado-falta{% endif %}">{{ aviso or "Se guarda sola al salir de cada campo." }}</span>
+        <noscript><button class="boton boton-acento" type="submit">Guardar ficha</button></noscript>
+    </p>
+</form>
+
+<section class="seccion sistema-final">
+    {% if x.retirado %}
+    <form class="en-linea" method="post" action="/inventario/{{ x.id }}/activar">
+        <button class="boton" type="submit">Volver a activar</button>
+        <span class="ayuda">Vuelve a contar en los puntos del inventario.</span>
+    </form>
+    {% else %}
+    <button class="boton boton-peligro" type="button"
+            data-confirmar="/inventario/{{ x.id }}/retirar"
+            data-titulo="¿Retirar este sistema?" data-nombre="{{ x.nombre }}"
+            data-ayuda="Deja de contar. Su ficha se guarda y sus archivos pasan a las versiones anteriores de cada requisito. Se puede volver a activar."
+            data-accion="Retirar">Retirar sistema</button>
+    {% endif %}
+</section>
+</div>
+{% endblock %}

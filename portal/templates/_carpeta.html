@@ -1,0 +1,16 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# El formulario de una carpeta: «Examinar» abre la ventana de Windows y deja la elegida escrita. Lo usan
+   la carpeta de las pruebas y la instalación, cada una con su `accion` #}
+{% set accion = accion or "/carpeta" %}
+<form method="post" action="{{ accion }}" id="form-carpeta">
+    {% if error %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+    <input type="hidden" name="accion" value="{{ accion }}">
+    <label class="etiqueta-campo" for="ruta">Carpeta</label>
+    <input id="ruta" name="ruta" type="text" value="{{ ruta }}" placeholder="Pulsa «Examinar…» para elegirla"
+           autocomplete="off" spellcheck="false">
+    <span class="botones-carpeta">
+        <button class="boton" type="button" hx-post="{{ examinar_url or '/carpeta/examinar' }}" hx-include="#form-carpeta"
+                hx-target="#form-carpeta" hx-swap="outerHTML" hx-disabled-elt="this">Examinar…</button>
+        <button class="boton boton-acento" type="submit">{{ boton or "Usar esta carpeta" }}</button>
+    </span>
+</form>

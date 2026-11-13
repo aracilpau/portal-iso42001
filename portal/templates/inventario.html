@@ -1,0 +1,82 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Inventario de IA · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+<div id="inventario">
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Empresa · A.4 Recursos de los sistemas de IA</p>
+        <h1 class="titular">Sistemas de IA</h1>
+        <p class="bajada">La IA del producto y las herramientas de IA que usa la plantilla. La ficha de cada uno cumple sola
+            los puntos A.4.2.a a A.4.6.a para ese sistema.</p>
+    </div>
+    <nav class="filtros" aria-label="Partes de Empresa">
+        <a href="/empresa" {% if seccion == 'empresa' %}class="on" aria-current="page"{% endif %}>Cuestionario</a>
+        <a href="/inventario" {% if seccion == 'inventario' %}class="on" aria-current="page"{% endif %}>Sistemas de IA</a>
+    </nav>
+</header>
+
+<form class="alta" method="post" action="/inventario">
+    <label class="alta-titulo" for="nombre-nuevo">Añadir un sistema</label>
+    <input id="nombre-nuevo" name="nombre" type="text" placeholder="Ej.: Asistente de la web, ChatGPT…"
+           value="{{ borrador.nombre if borrador else '' }}">
+    <select name="tipo" aria-label="Tipo de sistema">
+        <option value="" {% if not borrador or not borrador.tipo %}selected{% endif %} disabled>¿Del producto o herramienta?</option>
+        {% for clave, texto in TIPOS.items() %}
+        <option value="{{ clave }}" {% if borrador and borrador.tipo == clave %}selected{% endif %}>{{ texto }}</option>
+        {% endfor %}
+    </select>
+    <button class="boton boton-acento" type="submit">Añadir</button>
+</form>
+{% if error %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+{% if mensaje %}<p class="mensaje" role="status">{{ mensaje }}</p>{% endif %}
+
+<section class="seccion">
+    <div class="seccion-titulo"><h2>Sistemas activos</h2><small>{{ activos|length }}</small></div>
+    {% if activos %}
+    <ol class="sistemas">
+        {% for x in activos %}
+        {% set lleno = x.completos == total_campos %}
+        <li class="sistema-tarjeta{% if lleno %} completa{% endif %}">
+            <p class="antetitulo">{{ TIPOS[x.tipo] }}</p>
+            <a class="sistema-nombre" href="/inventario/{{ x.id }}">{{ x.nombre }}</a>
+            <div class="mini"><div class="mini-barra{% if lleno %} ok{% endif %}"><span style="width: {{ (100 * x.completos / total_campos)|round|int }}%"></span></div>
+                <b>{{ x.completos }}/{{ total_campos }}</b></div>
+            <p class="sub">{% if lleno %}Ficha completa{% else %}Faltan {{ total_campos - x.completos }} campo{{ 's' if total_campos - x.completos != 1 }} de su ficha{% endif %}</p>
+            <div class="sistema-pie">
+                <a class="boton boton-mini" href="/inventario/{{ x.id }}">Abrir ficha</a>
+                <button class="enlace enlace-peligro" type="button"
+                        data-confirmar="/inventario/{{ x.id }}/retirar"
+                        data-titulo="¿Retirar este sistema?" data-nombre="{{ x.nombre }}"
+                        data-ayuda="Deja de contar. Su ficha se guarda y sus archivos pasan a las versiones anteriores de cada requisito. Se puede volver a activar."
+                        data-accion="Retirar">Retirar</button>
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <p class="vacio">Aún no hay sistemas. Mientras el inventario esté vacío, A.4.2.a a A.4.6.a quedan pendientes.</p>
+    {% endif %}
+</section>
+
+{% if retirados %}
+<section class="seccion">
+    <div class="seccion-titulo"><h2>Retirados</h2><small>{{ retirados|length }} · ya no cuentan, pero su ficha se guarda</small></div>
+    <ol class="sistemas">
+        {% for x in retirados %}
+        <li class="sistema-tarjeta retirado">
+            <p class="antetitulo">{{ TIPOS[x.tipo] }} · retirado el {{ x.retirado|fecha }}</p>
+            <a class="sistema-nombre" href="/inventario/{{ x.id }}">{{ x.nombre }}</a>
+            <div class="sistema-pie">
+                <form class="en-linea" method="post" action="/inventario/{{ x.id }}/activar">
+                    <button class="boton boton-mini" type="submit">Volver a activar</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# El panel del chat («Preguntar»). El botón que lo abre está en la barra de base.html. #}
+<aside id="chat" class="chat-panel" hidden aria-label="Preguntar">
+    <header class="chat-cabeza">
+        <strong>Preguntar</strong>
+        <span class="chat-sub">sobre la norma o el portal · solo consulta</span>
+        <button class="chat-accion" type="button" data-chat-nueva title="Empezar una conversación nueva">Nueva</button>
+        <button class="chat-accion" type="button" data-chat-cerrar aria-label="Cerrar el panel" title="Cerrar (Esc)">✕</button>
+    </header>
+    <div id="chat-mensajes" class="chat-mensajes" aria-live="polite"></div>
+    <form id="chat-form" class="chat-form">
+        <label class="oculto" for="chat-pregunta">Tu pregunta</label>
+        <textarea id="chat-pregunta" name="pregunta" rows="2" placeholder="Escribe tu pregunta… (Intro para enviar)"></textarea>
+        <button class="chat-enviar" type="submit" data-chat-enviar>Enviar</button>
+        <button class="chat-enviar chat-parar" type="button" data-chat-parar hidden>Parar</button>
+    </form>
+</aside>
+<script src="{{ url_for('static', path='chat.js') }}?v={{ version }}" defer></script>

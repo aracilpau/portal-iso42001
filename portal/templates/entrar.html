@@ -1,0 +1,31 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Entrar · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# Lo primero al abrir el portal: correo y contraseña #}
+<div class="entrada">
+    <header>
+        <p class="antetitulo">Portal ISO/IEC 42001</p>
+        <h1 class="titular">Entrar</h1>
+    </header>
+    {% if equipo %}
+    <p class="mensaje" role="status">Listo: el portal ya está conectado con el de tu equipo. Entra con la cuenta que te
+        haya hecho quien lo administra; si aún no tienes, pídesela.</p>
+    {% endif %}
+    {% if error %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
+    {% if not hay_cuentas %}
+    <p class="mensaje mensaje-aviso">Todavía no hay ninguna cuenta. Pide la tuya a quien administra el portal.</p>
+    {% endif %}
+    <form method="post" action="/entrar">
+        <label class="etiqueta-campo" for="correo">Correo</label>
+        <input id="correo" name="correo" type="email" value="{{ correo }}" autocomplete="username" required autofocus>
+        <label class="etiqueta-campo" for="clave">Contraseña</label>
+        <input id="clave" name="clave" type="password" autocomplete="current-password" required>
+        <span><button class="boton boton-acento" type="submit">Entrar</button></span>
+    </form>
+    {% if usuario_prueba %}
+    <p class="ayuda">Portal de prueba: entra con <code>{{ usuario_prueba[0] }}</code> y la contraseña <code>{{ usuario_prueba[2] }}</code>.</p>
+    {% endif %}
+</div>
+{% endblock %}

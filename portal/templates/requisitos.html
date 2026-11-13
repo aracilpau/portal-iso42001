@@ -1,0 +1,61 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Requisitos · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{% set NOMBRES = {'hecho': ('Completo', 's-ok'), 'curso': ('En curso', 's-acento'), 'pendiente': ('Sin empezar', 's-gris'),
+                  'vencido': ('Algo vencido', 's-mal'), 'pronto': ('Vence pronto', 's-aviso'), 'noaplica': ('No aplica', 's-gris')} %}
+{% set dentro = filtros[ver][1] %}
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">65 requisitos · 27 obligatorios y 38 controles del Anexo A</p>
+        <h1 class="titular">Requisitos</h1>
+    </div>
+    <nav class="filtros" aria-label="Qué requisitos ver">
+        {% for clave, (texto, estados_f) in filtros.items() %}
+        {% set cuantos = estados.values()|selectattr(0, 'in', estados_f)|list|length if estados_f else estados|length %}
+        <a href="/requisitos{{ '?ver=' ~ clave if clave }}" {% if ver == clave %}class="on" aria-current="page"{% endif %}>{{ texto }}<b>{{ cuantos }}</b></a>
+        {% endfor %}
+    </nav>
+</header>
+
+{% set ns = namespace(alguno=false) %}
+<table class="tabla">
+    <thead>
+        <tr><th class="col-cod">Código</th><th>Requisito</th><th class="col-tipo">Cómo se demuestra</th>
+            <th class="col-cuanto">Cada cuánto</th><th class="col-av">Avance</th><th class="col-est">Estado</th></tr>
+    </thead>
+    {% for parte, bs in bloques %}
+    {% set de_parte = [] %}
+    {% for bloque, reqs in bs %}{% for r in reqs if not dentro or estados[r.codigo][0] in dentro %}{% set _ = de_parte.append(r) %}{% endfor %}{% endfor %}
+    {% if de_parte %}
+    <tbody>
+        <tr class="parte"><td colspan="6">{{ parte }} <small>{% if parte == 'Anexo A' %}obligatorios si aplican{% else %}obligatorios siempre{% endif %}</small></td></tr>
+        {% for bloque, reqs in bs %}
+        {% set vis = [] %}{% for r in reqs if not dentro or estados[r.codigo][0] in dentro %}{% set _ = vis.append(r) %}{% endfor %}
+        {% if vis %}
+        {% set ns.alguno = true %}
+        <tr class="grupo"><td colspan="6">{{ bloque }}</td></tr>
+        {% for r in vis %}
+        {% set e, pct = estados[r.codigo] %}
+        {% set av = est.avance(r.codigo) %}
+        <tr class="fila{% if e == 'noaplica' %} fila-noaplica{% endif %}">
+            <td class="col-cod"><a href="/requisitos/{{ r.codigo }}">{{ r.codigo }}</a></td>
+            <td class="col-titulo"><a href="/requisitos/{{ r.codigo }}" title="{{ r.resumen }}">{{ r.titulo }}</a></td>
+            <td class="col-tipo">{% for c in r.como %}<span class="etq">{{ c }}</span> {% endfor %}</td>
+            <td class="col-cuanto">{{ r.cada_cuanto|join(' · ') }}</td>
+            <td class="col-av">{% if e == 'noaplica' %}<span class="sub">—</span>{% else %}
+                <div class="mini"><div class="mini-barra{% if e == 'hecho' %} ok{% endif %}"><span style="width: {{ av.porcentaje }}%"></span></div>
+                    <b>{{ av.porcentaje }}%</b></div>
+                <span class="sub">{{ av.hechos }} de {{ av.total }}</span>{% endif %}</td>
+            <td class="col-est"><span class="sello {{ NOMBRES[e][1] }}">{{ NOMBRES[e][0] }}</span></td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+    </tbody>
+    {% endif %}
+    {% endfor %}
+</table>
+{% if not ns.alguno %}<p class="vacio">Ningún requisito en «{{ filtros[ver][0] }}».</p>{% endif %}
+{% endblock %}

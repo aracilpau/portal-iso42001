@@ -1,0 +1,385 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}{{ req.codigo }} {{ req.titulo }} · Portal ISO/IEC 42001{% endblock %}
+
+{# La casilla de un punto o de la línea de un sistema: pulsarla marca o desmarca #}
+{% macro casilla(url, marcado, que, codigo) -%}
+<form class="casilla-form" method="post" action="{{ url }}/{{ 'desmarcar' if marcado else 'marcar' }}"
+      hx-post="{{ url }}/{{ 'desmarcar' if marcado else 'marcar' }}" hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+    <button class="casilla{% if marcado %} casilla-marcada{% endif %}" type="submit" role="checkbox"
+            aria-checked="{{ 'true' if marcado else 'false' }}"
+            aria-label="{{ ('Desmarcar ' if marcado else 'Marcar como cumplido ') ~ que }}"
+            title="{{ 'Pulsa para desmarcar' if marcado else 'Pulsa para marcar como cumplido' }}">
+        <i aria-hidden="true">✓</i>{% if codigo %}<small>{{ codigo }}</small>{% endif %}
+    </button>
+</form>
+{%- endmacro %}
+
+{# El sello del estado de un punto o de una línea #}
+{% macro sello(e, hecho, texto_hecho='Cumplido') -%}
+{% if e == VENCE_PRONTO %}<span class="sello s-aviso">Vence pronto</span>
+{% elif e == VENCIDO %}<span class="sello s-mal">Vencido</span>
+{% elif hecho %}<span class="sello s-ok">{{ texto_hecho }}</span>
+{% else %}<span class="sello s-gris">Pendiente</span>{% endif %}
+{%- endmacro %}
+
+{# Los archivos de un punto o de una línea, con «Quitar», versiones anteriores y «Subir versión nueva» #}
+{% macro archivos_de(base_url, lista, hist, renueva, que, punto, sistema='') -%}
+{% if lista %}
+<ul class="archivos">
+    {% for a in lista %}
+    <li class="archivo">
+        <b>{{ a.nombre.rsplit('.', 1)[-1]|upper if '.' in a.nombre else 'ARCH' }}</b>
+        <a href="{{ base_url }}/archivos/{{ a.nombre|urlencode }}" target="_blank" rel="noopener">{{ a.nombre }}</a>
+        {# Quién lo subió; lo que no está en «Actividad» se metió desde el Explorador #}
+        {% set por = subido_por.get((punto, sistema, a.nombre)) %}
+        <span class="sub">{{ a.fecha|fecha }} · {{ a.tamaño }}{% if por %} · Subido por {{ por }}{% elif por is none %} · Añadido en la carpeta{% endif %}</span>
+        <form class="en-linea" method="post" action="{{ base_url }}/archivos/{{ a.nombre|urlencode }}/quitar"
+              hx-post="{{ base_url }}/archivos/{{ a.nombre|urlencode }}/quitar" hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+            <button class="enlace enlace-quitar" type="submit" title="Pasa a versiones anteriores">Quitar</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+<div class="archivos-acciones">
+    <form class="en-linea" method="post" action="{{ base_url }}/archivos" enctype="multipart/form-data"
+          hx-post="{{ base_url }}/archivos" hx-encoding="multipart/form-data" hx-trigger="change"
+          hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+        <label class="soltar" title="O arrastra el archivo encima">Suelta aquí un archivo o <span class="enlace">+ Archivo</span>
+            <input type="file" name="archivos" multiple hidden>
+        </label>
+        <noscript><button class="boton boton-mini" type="submit">Enviar</button></noscript>
+    </form>
+    {% if lista %}
+    <form class="en-linea" method="post" action="{{ base_url }}/version" enctype="multipart/form-data"
+          hx-post="{{ base_url }}/version" hx-encoding="multipart/form-data" hx-trigger="change"
+          hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+        <label class="enlace" title="Los archivos actuales pasan a versiones anteriores{% if renueva %} y {{ que }} se renueva desde hoy{% endif %}">
+            Subir versión nueva <input type="file" name="archivos" multiple hidden>
+        </label>
+    </form>
+    {% endif %}
+    {% if hist %}<a class="enlace" href="#historial">Versiones anteriores ({{ hist|length }})</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% block contenido %}
+{% set av = est.avance(req.codigo) %}
+{% set aplica = est.aplica(req.codigo) %}
+{% set completo = est.completo(req.codigo) %}
+<div id="ficha">
+<p class="miga"><a href="/requisitos">Requisitos</a> / {{ req.bloque }} / {{ req.codigo }}</p>
+
+<header class="ficha-cabeza">
+    <div class="ficha-cod">{{ req.codigo }}</div>
+    <div>
+        <p class="antetitulo">{{ req.bloque }} · {% if req.obligatorio %}Obligatorio{% else %}Control del Anexo A{% endif %}</p>
+        <h1 class="titular">{{ req.titulo }}</h1>
+        {% if req.llano %}
+        <dl class="llano">
+            <dt>Qué pide</dt><dd>{{ req.llano.pide }}</dd>
+            <dt>Quién</dt><dd>{{ req.llano.quien }}</dd>
+            <dt>Por dónde empezar</dt><dd>{{ req.llano.empezar }}</dd>
+        </dl>
+        {% else %}
+        <p class="ficha-resumen">{{ req.resumen }}</p>
+        {% endif %}
+        <div class="etqs">
+            {% for c in req.como %}<span class="etq">{{ c }}</span>{% endfor %}
+            {% for c in req.cada_cuanto %}<span class="etq etq-cuanto">{{ c }}</span>{% endfor %}
+        </div>
+    </div>
+    {% if aplica %}
+    <div class="ficha-avance" role="progressbar" aria-valuenow="{{ av.porcentaje }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="cifra-num{% if completo %} cifra-ok{% endif %}">{{ av.porcentaje }}<small>%</small></div>
+        <p class="cifra-de">{{ av.hechos }} de {{ av.total }} {% if req.puntos %}puntos{% else %}requisitos{% endif %}{% if completo %} · completo{% endif %}</p>
+    </div>
+    {% endif %}
+</header>
+
+{% if not aplica %}
+<p class="aviso-noaplica">
+    <strong>No aplica en este espacio.</strong> {{ decision.porque }}
+    No cuenta en el porcentaje y sus puntos no se marcan. <a href="/declaracion#control-{{ req.codigo }}">Cambiarlo en la Declaración</a>
+</p>
+{% endif %}
+
+<div class="ficha">
+<div class="ficha-principal">
+    {% if req.es_resumen %}
+    <p class="reparto">
+        {% if req.puntos %}No tiene trabajo propio: todos sus puntos se cumplen al cumplir los requisitos en los que se apoyan.
+        {% else %}No tiene trabajo propio: se cumple al cumplir todos los demás requisitos.{% endif %}
+    </p>
+    {% elif req.puntos and aplica %}
+    <p class="reparto">
+        {% set partes = [] %}
+        {% if reparto[APOYADO] %}{% set _ = partes.append(reparto[APOYADO] ~ ' se cumple' ~ ('n' if reparto[APOYADO] != 1) ~ ' solo' ~ ('s' if reparto[APOYADO] != 1) ~ ' al completar otros requisitos') %}{% endif %}
+        {% if reparto[SISTEMA] %}{% set _ = partes.append(reparto[SISTEMA] ~ ' se hace' ~ ('n' if reparto[SISTEMA] != 1) ~ ' una vez por cada sistema de IA del inventario') %}{% endif %}
+        {% if partes %}De {{ av.total }} puntos, {{ partes|join(' y ') }}; te queda{{ 'n' if reparto[PROPIO] != 1 }} {{ reparto[PROPIO] }} propio{{ 's' if reparto[PROPIO] != 1 }}.
+        {% else %}Los {{ av.total }} puntos son propios.{% endif %}
+        Marca cada uno al tenerlo; arrastra los archivos encima del punto.
+    </p>
+    {% endif %}
+
+    {% if req.puntos %}
+    <ol class="puntos">
+        {% for p in req.puntos %}
+        {% set c = est.clase(p) %}
+        {% set hecho = est.cumplido(p) %}
+        {% set e = est.estado(p) %}
+        {% set marcado = est.marcado(p) %}
+        {% set a_mano = c == PROPIO and aplica %}
+        <li class="punto{% if hecho %} hecho{% endif %}{% if not a_mano %} punto-solo{% endif %}" id="{{ p.codigo }}"
+            {% if a_mano %}data-soltar="/requisitos/{{ req.codigo }}/puntos/{{ p.codigo }}/archivos" data-soltar-que="{{ p.codigo }}"{% endif %}>
+            {% if a_mano %}
+            {{ casilla('/requisitos/' ~ req.codigo ~ '/puntos/' ~ p.codigo, marcado, p.codigo, p.codigo) }}
+            {% else %}
+            <div class="punto-lado" title="{% if c == APOYADO %}Se marca solo{% elif c in (SISTEMA, FICHA) %}Va por sistema{% else %}No se marca{% endif %}">
+                <i aria-hidden="true">{% if hecho %}✓{% elif c == APOYADO %}↗{% elif c in (SISTEMA, FICHA) %}▦{% else %}–{% endif %}</i><small>{{ p.codigo }}</small>
+            </div>
+            {% endif %}
+            <div class="punto-cuerpo">
+                <div class="punto-linea">
+                    <strong>{{ p.titulo_llano or p.texto }}</strong>
+                </div>
+                {% if p.explicacion %}<p class="punto-explicacion">{{ p.explicacion }}</p>{% endif %}
+                <div class="punto-etqs">
+                    {{ sello(e, hecho) }}
+                    <span class="etq">{{ p.tipo }}</span>
+                    {% if p.recomendado %}<span class="etq etq-reco">Recomendado</span>{% endif %}
+                    {% if p.por_sistema %}<span class="etq etq-sistema">Por sistema · {{ p.por_sistema }}</span>{% endif %}
+                    {% if c in (SISTEMA, FICHA) and est.sistemas_de(p) %}
+                    {% set suyos = est.sistemas_de(p) %}
+                    <span class="sub">{{ suyos|length - est.faltan_sistemas(p)|length }} de {{ suyos|length }} sistema{{ 's' if suyos|length != 1 }}</span>
+                    {% endif %}
+                </div>
+
+                {% if p.te_pediran %}<p class="punto-pediran"><b>Te pedirán:</b> {{ p.te_pediran }}</p>{% endif %}
+
+                {% if p.apoyos %}
+                <p class="punto-apoyo">Se apoya en {% for a in p.apoyos %}<a href="/requisitos/{{ a }}">{{ a }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
+                    {% if c == APOYADO and not hecho %}Se marcará solo cuando esté{{ 'n' if est.faltan(p)|length != 1 }} completo{{ 's' if est.faltan(p)|length != 1 }}: {{ est.faltan(p)|join(', ') }}.{% endif %}
+                </p>
+                {% endif %}
+                {% if c == PROPIO and clase(p) == APOYADO %}
+                <p class="punto-espera">Se apoyaba en un control que no aplica, así que ahora es trabajo propio: márcalo a mano.</p>
+                {% endif %}
+
+                {% if marcado %}
+                <p class="vence">
+                    {% if est.vence(p) %}
+                    {% if e == VENCIDO %}Venció{% else %}Vence{% endif %} el {{ est.vence(p)|fecha }}{% if e == VENCIDO %}: ya no cuenta hasta que se renueve{% endif %}.
+                    {% else %}No vence por fecha{% if se_reabre(req) %}: se reabre si pasa algo que le afecte{% endif %} · revisado el {{ est.marcas[p.codigo].desde|fecha }}.{% endif %}
+                    {% set m = est.marcas.get(p.codigo) %}{% if m and m.quien %}<span class="sub">Marcado el {{ m.desde|fecha }} por {{ m.quien }}.</span>{% endif %}
+                    {% if a_mano and est.vence(p) %}
+                    <form class="en-linea" method="post" action="/requisitos/{{ req.codigo }}/puntos/{{ p.codigo }}/renovar"
+                          hx-post="/requisitos/{{ req.codigo }}/puntos/{{ p.codigo }}/renovar" hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+                        <button class="boton boton-mini{% if e in (VENCE_PRONTO, VENCIDO) %} boton-acento{% endif %}" type="submit"
+                                title="Sigue valiendo: vuelve a contar desde hoy">Renovar</button>
+                    </form>
+                    {% endif %}
+                </p>
+                {% endif %}
+
+                {% if a_mano %}
+                {% set base_url = '/requisitos/' ~ req.codigo ~ '/puntos/' ~ p.codigo %}
+                {% if movido and movido.startswith(p.codigo ~ ' - ') %}
+                <p class="mensaje" role="status">Se ha movido a versiones anteriores como «{{ movido }}». <a href="#historial">Ver versiones anteriores</a></p>
+                {% endif %}
+                {{ archivos_de(base_url, archivos[p.codigo], historial|selectattr('nombre', 'en_punto', p.codigo)|list, marcado and est.vence(p), 'el punto', p.codigo) }}
+                {% set rv_punto, rv_sid, rv_url, rv_ancla, rv_hay = p.codigo, 0, base_url, p.codigo, archivos[p.codigo] %}
+                {% set clase_boton_revisar = "boton boton-mini boton-acento" %}
+                {% include "_revision.html" %}
+                {% endif %}
+
+                {% if c == SISTEMA %}
+                {% set suyos = est.sistemas_de(p) %}
+                {% set cl = est.clase_linea(p) %}
+                {% if not est.sistemas %}
+                <p class="punto-espera">Añade tus sistemas al <a href="/inventario">inventario</a>: este punto se lleva sistema por sistema.</p>
+                {% elif not suyos %}
+                <p class="punto-espera">No hay IA del producto en el <a href="/inventario">inventario</a>: este punto no hace falta por ahora.</p>
+                {% else %}
+                <ol class="lineas">
+                    {% for x in suyos %}
+                    {% set ex = est.estado_en(p, x) %}
+                    {% set mx = est.marcado_en(p, x) %}
+                    {% set vx = est.vence_en(p, x) %}
+                    {% set url = '/requisitos/' ~ req.codigo ~ '/puntos/' ~ p.codigo ~ '/sistemas/' ~ x.id %}
+                    {% set a_mano_x = cl == PROPIO and aplica %}
+                    <li class="linea{% if ex not in ('pendiente', VENCIDO) %} hecho{% endif %}" id="{{ p.codigo }}-{{ x.id }}"
+                        {% if a_mano_x %}data-soltar="{{ url }}/archivos" data-soltar-que="{{ p.codigo }} · {{ x.nombre }}"{% endif %}>
+                        <div class="linea-cabeza">
+                            {% if a_mano_x %}{{ casilla(url, mx, p.codigo ~ ' en ' ~ x.nombre, '') }}{% endif %}
+                            <a class="linea-nombre" href="/inventario/{{ x.id }}">{{ x.nombre }}</a>
+                            {{ sello(ex, ex not in ('pendiente', VENCIDO, VENCE_PRONTO)) }}
+                            {% if mx %}
+                            <span class="sub">
+                                {% if vx %}{% if ex == VENCIDO %}Venció{% else %}Vence{% endif %} el {{ vx|fecha }}{% if ex == VENCIDO %}: ya no cuenta hasta que se renueve{% endif %}.
+                                {% else %}No vence por fecha · revisado el {{ est.lineas[(p.codigo, x.id)].desde|fecha }}.{% endif %}
+                                {% set m = est.lineas.get((p.codigo, x.id)) %}{% if m and m.quien %}Marcado el {{ m.desde|fecha }} por {{ m.quien }}.{% endif %}
+                            </span>
+                            {% if a_mano_x and vx %}
+                            <form class="en-linea" method="post" action="{{ url }}/renovar"
+                                  hx-post="{{ url }}/renovar" hx-target="#ficha" hx-select="#ficha" hx-swap="outerHTML">
+                                <button class="boton boton-mini{% if ex in (VENCE_PRONTO, VENCIDO) %} boton-acento{% endif %}" type="submit"
+                                        title="Sigue valiendo: vuelve a contar desde hoy">Renovar</button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if cl == APOYADO %}
+                        <p class="punto-espera">{% if ex == 'pendiente' %}Se marcará solo cuando, para este sistema, esté{{ 'n' if est.faltan_en(p, x)|length != 1 }} completo{{ 's' if est.faltan_en(p, x)|length != 1 }}: {{ est.faltan_en(p, x)|join(', ') }}.
+                            {% else %}Se cumple solo con lo de este sistema en {{ p.apoyos|join(', ') }}.{% endif %}</p>
+                        {% endif %}
+                        {% if a_mano_x %}
+                        {% if movido and movido.startswith(p.codigo ~ ' - ' ~ (x.nombre|seguro) ~ ' - ') %}
+                        <p class="mensaje" role="status">Se ha movido a versiones anteriores como «{{ movido }}». <a href="#historial">Ver versiones anteriores</a></p>
+                        {% endif %}
+                        {{ archivos_de(url, archivos_linea.get((p.codigo, x.id), []), historial|selectattr('nombre', 'en_punto', p.codigo ~ ' - ' ~ (x.nombre|seguro))|list, mx and vx, 'la línea', p.codigo, x.nombre) }}
+                        {% set rv_punto, rv_sid, rv_url, rv_ancla, rv_hay = p.codigo, x.id, url, p.codigo ~ '-' ~ x.id, archivos_linea.get((p.codigo, x.id), []) %}
+                        {% set clase_boton_revisar = "boton boton-mini boton-acento" %}
+                        {% include "_revision.html" %}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% endif %}
+                {% endif %}
+
+                {% if c == FICHA %}
+                {% if est.sistemas %}
+                <ul class="lineas">
+                    {% for x in est.sistemas_de(p) %}
+                    {% set ex = est.estado_en(p, x) %}
+                    <li class="linea{% if ex != 'pendiente' %} hecho{% endif %}">
+                        <div class="linea-cabeza">
+                            <a class="linea-nombre" href="/inventario/{{ x.id }}">{{ x.nombre }}</a>
+                            {{ sello(ex, ex != 'pendiente', 'Hecho') }}
+                            {% if ex == 'pendiente' %}<span class="sub">falta rellenar «{{ CAMPO_TITULO[p.codigo] }}» en su ficha</span>{% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <p class="punto-espera">Se cumple solo con el campo <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> de la ficha de cada sistema del <a href="/inventario">inventario</a>: hace falta en todos los activos.</p>
+                {% else %}
+                <p class="punto-espera">Añade tus sistemas al <a href="/inventario">inventario</a>: este punto se cumple solo con el campo <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> de la ficha de cada uno.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    {% endif %}
+
+    <section class="seccion historial" id="historial">
+        <div class="seccion-titulo"><h2>Versiones anteriores</h2><small>{{ historial|length }}</small></div>
+        {% if borrado %}<p class="mensaje" role="status">«{{ borrado }}» se ha borrado para siempre.</p>{% endif %}
+        <p class="ayuda">Lo que se quitó o se sustituyó al renovar, con el punto y el día delante. No se borra solo.</p>
+        {% if historial %}
+        <ul class="archivos archivos-historial">
+            {% for a in historial %}
+            <li class="archivo">
+                <a href="/requisitos/{{ req.codigo }}/historial/{{ a.nombre|urlencode }}" target="_blank" rel="noopener">{{ a.nombre }}</a>
+                <span class="sub">{{ a.tamaño }}</span>
+                <button class="enlace enlace-peligro" type="button"
+                        data-confirmar="/requisitos/{{ req.codigo }}/historial/{{ a.nombre|urlencode }}/borrar"
+                        data-titulo="¿Seguro que quieres borrarlo para siempre?" data-ayuda="No se puede deshacer."
+                        data-accion="Borrar para siempre" data-nombre="{{ a.nombre }}">Borrar para siempre</button>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="vacio">Aún no hay versiones anteriores.</p>
+        {% endif %}
+    </section>
+</div>
+
+<aside class="lado">
+    {% if req.cuando_aplica %}
+    <section class="caja">
+        <h2>¿Aplica a tu empresa?</h2>
+        <p>{{ req.cuando_aplica }}</p>
+        <p class="caja-pie">
+            {% if decision is none %}Aún sin decidir.{% elif decision.aplica %}Decidido: <strong>aplica</strong>. {{ decision.porque }}{% else %}Decidido: <strong>no aplica</strong>.{% endif %}
+            <a class="enlace" href="/declaracion#control-{{ req.codigo }}">{% if decision is none %}Decidirlo{% else %}Ver{% endif %} en la Declaración</a>
+        </p>
+    </section>
+    {% endif %}
+
+    {% if req.nota %}
+    <section class="caja caja-atencion">
+        <h2>A tener en cuenta</h2>
+        <p>{{ req.nota }}</p>
+    </section>
+    {% endif %}
+
+    {% if con_borrador %}
+    <section class="caja" id="borrador">
+        {% if borrador_generico %}
+        <h2>Base para empezar el documento</h2>
+        <p>Un Word para empezar a escribir: un apartado por cada punto que se demuestra con un documento, con lo que tiene
+            que decir y lo que pedirá el auditor. Lo vuestro va en cada [POR COMPLETAR].</p>
+        {% else %}
+        <h2>Borrador del documento</h2>
+        <p>Un Word con la plantilla de este documento, rellena con lo que dice <a href="/empresa">«Empresa»</a> y el
+            inventario. Lo que solo puede
+            decidir la empresa sale como [POR COMPLETAR].</p>
+        {% endif %}
+        <form class="caja-pie" method="post" action="/requisitos/{{ req.codigo }}/borrador" data-descargar>
+            <button class="boton boton-mini boton-acento" type="submit">
+                <span class="sin-pensar">Hacer borrador</span><span class="pensando">Preparando… (puede tardar un minuto)</span>
+            </button>
+            <p class="mensaje mensaje-error" data-descargar-error role="alert" hidden></p>
+        </form>
+        {% if faltan_empresa %}
+        <p class="mensaje mensaje-aviso">Te queda{{ 'n' if faltan_empresa != 1 }} {{ faltan_empresa }} pregunta{{ 's' if faltan_empresa != 1 }} por aclarar en «Empresa»: el borrador saldrá con más [POR COMPLETAR]. <a href="/empresa">Contestarlas</a></p>
+        {% endif %}
+        {% include "_destino.html" %}
+    </section>
+    {% endif %}
+
+    <section class="caja" id="nota">
+        <h2>Cómo lo hacemos aquí</h2>
+        <form class="nota-form" method="post" action="/requisitos/{{ req.codigo }}/nota"
+              hx-post="/requisitos/{{ req.codigo }}/nota" hx-trigger="input changed delay:1s, change"
+              hx-target="#nota-estado" hx-swap="outerHTML">
+            <label class="ayuda" for="nota-texto">Quién se encarga, dónde está cada cosa, cómo lo resolvéis.</label>
+            <textarea id="nota-texto" name="texto" rows="5">{{ nota }}</textarea>
+            <noscript><button class="boton boton-mini" type="submit">Guardar nota</button></noscript>
+            <span id="nota-estado" class="guardado-estado" role="status">{% if nota_guardada %}Nota guardada.{% else %}Se guarda sola mientras escribes.{% endif %}</span>
+        </form>
+    </section>
+
+    {% if aplica and se_reabre(req) and est.algo_marcado(req) %}
+    <section class="caja">
+        <h2>¿Ha cambiado algo?</h2>
+        <p>Si ha pasado algo que le afecte, sus puntos vuelven a pendiente hasta que los revises.</p>
+        <p class="caja-pie">
+            <button class="boton boton-mini" type="button" data-confirmar="/requisitos/{{ req.codigo }}/reabrir"
+                    data-titulo="¿Ha cambiado algo que afecte a {{ req.codigo }}?" data-nombre="{{ req.titulo }}"
+                    data-ayuda="Sus puntos vuelven a pendiente hasta que los revises." data-accion="Reabrir">Reabrir {{ req.codigo }}</button>
+        </p>
+    </section>
+    {% endif %}
+
+    <section class="caja">
+        <h2>Lo último</h2>
+        {% if ultimo %}
+        <ul class="historia">
+            {% for f in ultimo %}
+            <li><time>{{ f.cuando[8:10] }}/{{ f.cuando[5:7] }}</time>
+                <span>{% if f.punto %}<span class="mono">{{ f.punto }}</span> · {% endif %}{% if f.sistema %}{{ f.sistema }} · {% endif %}{{ acciones.get(f.accion, f.accion) }}{% if f.quien %} · {{ f.quien }}{% endif %}</span></li>
+            {% endfor %}
+        </ul>
+        <p class="caja-pie"><a class="enlace" href="/actividad?requisito={{ req.codigo }}">Toda la actividad de {{ req.codigo }}</a></p>
+        {% else %}
+        <p>Aún no se ha hecho nada en este requisito.</p>
+        {% endif %}
+    </section>
+</aside>
+</div>
+</div>
+{% endblock %}

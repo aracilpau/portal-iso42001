@@ -1,0 +1,26 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Licencia · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# La licencia en llano y, debajo, el texto que vale legalmente (el de LICENSE, en inglés) #}
+<header class="saludo">
+    <div>
+        <p class="antetitulo">Licencia</p>
+        <h1 class="titular">Para usarlo <em>dentro de tu empresa</em>.</h1>
+    </div>
+</header>
+
+<ul>
+    <li><strong>Puedes</strong> usar el portal y modificarlo para el trabajo interno de tu empresa: todos los que
+        trabajan en ella pueden usarlo.</li>
+    <li><strong>No puedes</strong> pasarle una copia a otra empresa ni a nadie de fuera: quien lo quiera, que lo
+        descargue de su repositorio en GitHub.</li>
+    <li><strong>Tampoco puedes</strong> venderlo, ofrecerlo como servicio a otros ni instalarlo a un cliente.</li>
+    <li>Se ofrece tal cual, sin garantías.</li>
+</ul>
+
+<p>Esto es un resumen. El texto que vale es el de la licencia, en inglés:</p>
+
+<pre class="licencia-texto">{{ texto }}</pre>
+{% endblock %}

@@ -1,0 +1,20 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}Sin conexión · Portal ISO/IEC 42001{% endblock %}
+
+{% block contenido %}
+{# Sin el MySQL no hay nada que enseñar: falta secretos.env, no hay internet o la clave no vale #}
+<div class="entrada">
+    <header>
+        <p class="antetitulo">Portal ISO/IEC 42001</p>
+        <h1 class="titular">Sin conexión</h1>
+    </header>
+    <p class="mensaje mensaje-error" role="alert">{{ texto }}</p>
+    <p class="ayuda">No se ha guardado nada a medias: lo que estuvieras cambiando, vuelve a hacerlo cuando haya conexión.</p>
+    <span><a class="boton boton-acento" href="/">Volver a intentarlo</a></span>
+    {% if cambiar_mysql %}
+    <p class="ayuda">¿Ha cambiado la contraseña del MySQL o su dirección? Escribe los datos nuevos; no se pierde nada.</p>
+    <form method="post" action="/sin-conexion/mysql"><button class="boton" type="submit">Cambiar los datos del MySQL</button></form>
+    {% endif %}
+</div>
+{% endblock %}

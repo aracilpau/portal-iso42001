@@ -1,0 +1,19 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# Tras guardar sola una respuesta de «Empresa»: lo que se pone al día en la página #}
+{% from "_empresa.html" import bloque_abiertas, estado as estado_cuestionario %}
+{% from "_reabrir.html" import lista_reabrir %}
+{{ estado_cuestionario(perfil, hora, oob=True) }}
+<span id="nota-{{ clave }}" class="cuestionario-nota" hx-swap-oob="true"></span>
+<div id="reabrir-{{ clave }}" hx-swap-oob="true">
+    {% if reabrir %}
+    <div class="empresa-reabrir">
+        {{ lista_reabrir('/empresa/reabrir/' ~ clave, reabrir, est, 'Has cambiado la respuesta: ¿reabres lo que depende de ella?') }}
+    </div>
+    {% endif %}
+</div>
+{% if clave == 'desarrolla' %}
+{# El bloque 5 aparece o se esconde según la respuesta #}
+{% for b, titulo in bloques.items() if b == SOLO_SI_DESARROLLA %}
+{{ bloque_abiertas(b, titulo, abiertas, perfil, oob=True) }}
+{% endfor %}
+{% endif %}

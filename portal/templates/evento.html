@@ -1,0 +1,23 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{% extends "base.html" %}
+{% block titulo %}{{ sit.titulo }} · Ha pasado algo{% endblock %}
+
+{% block contenido %}
+<div id="evento">
+<p class="miga"><a href="/">Inicio</a> / <a href="/eventos">Ha pasado algo</a> / {{ sit.titulo }}</p>
+<header class="cabeza">
+    <div>
+        <p class="antetitulo">Ha pasado algo</p>
+        <h1 class="titular">{{ sit.titulo }}</h1>
+        <p class="bajada">{{ sit.cuando }}</p>
+    </div>
+</header>
+
+{% from "_reabrir.html" import lista_reabrir %}
+{% if afectados %}
+{{ lista_reabrir("/eventos/" ~ sit.clave, afectados, est, "Requisitos que tocan") }}
+{% else %}
+<p class="vacio">Ninguno de sus requisitos cuenta ahora mismo (los controles que no aplican no se reabren).</p>
+{% endif %}
+</div>
+{% endblock %}

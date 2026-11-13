@@ -1,0 +1,45 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+{# La propuesta dentro de un control de la Declaración. Recibe r (el control) y d (lo decidido).
+   Sin decidir: Aceptar / Cambiar / Descartar. Decidido: solo si se propondría otra cosa. FALTA SABER: su pregunta.
+   Declaración mixta: dice quién la ha decidido (tus respuestas, «aplica casi siempre» o la IA) y el aviso, si lo hay. #}
+{% set p = propuestas.get(r.codigo) %}
+{% if p and not (d and p.decision != 'falta' and (p.decision == 'aplica') == d.aplica) and not (d and p.decision == 'falta') %}
+{% set url = '/declaracion/propuesta/' ~ r.codigo %}
+{% set hx = 'hx-target="closest li" hx-select="[id=\'control-' ~ r.codigo ~ '\']" hx-swap="outerHTML" hx-select-oob="#declaracion-resumen,#propuestas"' %}
+<div class="propuesta propuesta-{{ p.decision }}{% if d %} propuesta-otra{% endif %}" id="propuesta-{{ r.codigo }}">
+    <p class="propuesta-que">
+        {% set quien = quien_decide(p.quien, p.apoyo) %}
+        <span class="propuesta-quien">{% if d %}{% if p.quien == 'ia' %}La IA propondría otra cosa{% else %}Se propondría otra cosa ({{ quien }}){% endif %}{% else %}{{ quien[0]|upper }}{{ quien[1:] }}{% endif %}</span>
+        <strong>{% if p.decision == 'aplica' %}Aplica{% elif p.decision == 'no_aplica' %}No aplica{% else %}Falta saber{% endif %}</strong>
+    </p>
+    {% if p.decision == 'falta' %}
+    <p class="propuesta-porque">{{ p.porque }}</p>
+    {% if p.contestado %}<p class="ayuda">Ya contestaste: «{{ p.contestado }}», y aún falta saber esto.</p>{% endif %}
+    {% if error_ia and error_control == r.codigo %}<p class="mensaje mensaje-error" role="alert">{{ error_ia }}</p>{% endif %}
+    <form class="propuesta-contestar" method="post" action="{{ url }}/contestar" hx-post="{{ url }}/contestar" {{ hx|safe }}
+          hx-disabled-elt="find button">
+        <label class="oculto" for="contestar-{{ r.codigo }}">Tu respuesta</label>
+        <input id="contestar-{{ r.codigo }}" name="texto" type="text" placeholder="Tu respuesta…">
+        <button class="boton boton-mini" type="submit"><span class="sin-pensar">Contestar</span><span class="pensando">Pensando…</span></button>
+    </form>
+    {% else %}
+    <p class="propuesta-porque">{{ p.porque }}</p>
+    {% endif %}
+    {% if p.apoyo and p.quien == 'ia' %}<p class="ayuda">Se apoya en: {{ p.apoyo }}</p>{% endif %}
+    {% if p.aviso %}<p class="propuesta-aviso" role="note"><strong>Míralo:</strong> {{ p.aviso }}</p>{% endif %}
+    <div class="propuesta-botones">
+        {% if p.decision != 'falta' %}
+        <form method="post" action="{{ url }}/aceptar" hx-post="{{ url }}/aceptar" {{ hx|safe }}>
+            <button class="boton boton-mini boton-acento" type="submit">{% if d %}Cambiar a «{% if p.decision == 'aplica' %}Aplica{% else %}No aplica{% endif %}»{% else %}Aceptar{% endif %}</button>
+        </form>
+        {% if not d %}
+        <button class="boton boton-mini" type="button" data-cambiar-propuesta="{{ 'si' if p.decision == 'aplica' else 'no' }}"
+                data-porque="{{ p.porque }}">Cambiar</button>
+        {% endif %}
+        {% endif %}
+        <form method="post" action="{{ url }}/descartar" hx-post="{{ url }}/descartar" {{ hx|safe }}>
+            <button class="enlace" type="submit">Descartar</button>
+        </form>
+    </div>
+</div>
+{% endif %}

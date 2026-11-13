@@ -1,0 +1,10 @@
+# Datos del portal y claves: nunca en git
+datos/
+datos-prueba/
+datos-servidor/
+secretos.env
+
+# Entorno de Python y archivos que genera
+.venv/
+__pycache__/
+.pytest_cache/

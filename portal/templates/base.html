@@ -1,0 +1,146 @@
+{#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if prueba %}PRUEBA · {% elif local %}LOCAL · {% endif %}{% block titulo %}Portal ISO/IEC 42001{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='mesa.css') }}?v={{ version }}">
+    <script src="{{ url_for('static', path='htmx.min.js') }}?v={{ version }}" defer></script>
+    <script>
+        // Tema: el que se eligió en Ajustes, o el del ordenador si no se ha elegido
+        try {
+            const t = localStorage.getItem("tema");
+            if (t) document.documentElement.dataset.tema = t;
+        } catch (e) {}
+    </script>
+</head>
+<body>
+    {% set sesion = sesion_actual() %}
+    {# Quién está y en qué empresa: en una franja fina encima, para no apretar el menú #}
+    {% if sesion %}
+    <div class="franja">
+        <div class="franja-dentro quien">
+            <span>{% if sesion.empresa %}<strong>{{ sesion.empresa.nombre }}</strong> · {% endif %}{{ sesion.usuario.nombre }}</span>
+            {% if sesion.empresa %}<a href="/empresas">Cambiar empresa</a>{% endif %}
+            {% if sesion.administrador %}<a href="/administrar">Administrar</a>{% endif %}
+            <a href="/contrasena">Cambiar contraseña</a>
+            <form method="post" action="/salir"><button type="submit">Salir</button></form>
+            {% if sesion.empresa %}
+            <a class="ajustes-icono" href="/ajustes" title="Ajustes" aria-label="Ajustes" {% if seccion == 'ajustes' %}aria-current="page"{% endif %}>⚙</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {# Estilo «Mesa de control»: el menú arriba, como una web, y el buscador a mano #}
+    <header class="barra">
+        <div class="barra-dentro">
+            <a class="logo" href="/"><b>42001</b><span>Sistema de gestión<br>de la IA</span>
+                {% if prueba %}<span class="prueba marca-prueba" title="Portal de prueba: datos inventados en datos-prueba">PRUEBA</span>{% endif %}
+                {% if local %}<span class="prueba marca-local" title="Portal local: todo en este ordenador, en la carpeta datos">LOCAL</span>{% endif %}</a>
+            {% if sesion and sesion.empresa %}
+            <nav class="nav" aria-label="Secciones">
+                {# Cinco apartados: el inventario va dentro de «Empresa»; Ajustes, con la rueda de la franja #}
+                {% for clave, texto, url in [('inicio', 'Inicio', '/'), ('empresa', 'Empresa', '/empresa'),
+                    ('requisitos', 'Requisitos', '/requisitos'), ('declaracion', 'Declaración', '/declaracion'),
+                    ('actividad', 'Actividad', '/actividad')] %}
+                <a href="{{ url }}" {% if seccion == clave or (clave == 'empresa' and seccion == 'inventario') %}class="activa" aria-current="page"{% endif %}>{{ texto }}</a>
+                {% endfor %}
+            </nav>
+            {# El chat: en la barra, junto al buscador #}
+            <button class="chat-abrir" type="button" data-chat-abrir>Preguntar</button>
+            <a class="buscar" id="abrir-buscador" href="/requisitos">⌕ Ir a un requisito o punto… <span class="tecla">Ctrl K</span></a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="pagina">
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <footer class="pie-portal">Desarrollado en Movired · <a href="/licencia">Licencia de uso interno</a></footer>
+
+    {% if sesion and sesion.empresa %}{% include "_chat.html" %}{% endif %}
+
+    <div class="globo" id="globo" aria-hidden="true"></div>
+
+    {# El buscador (Ctrl K): ir a un requisito o a un punto escribiendo su código o unas palabras #}
+    <dialog id="buscador" class="buscador" aria-label="Buscar un requisito o un punto">
+        <input id="buscador-texto" type="search" autocomplete="off" placeholder="Código o palabras: «7.2», «riesgos», «proveedor»…">
+        <ul id="buscador-lista"></ul>
+        <p class="buscador-pie sub">↑ ↓ para elegir · Intro para ir · Esc para cerrar</p>
+    </dialog>
+
+    <dialog id="confirmar" class="dialogo" aria-labelledby="confirmar-titulo">
+        <form method="post">
+            <p id="confirmar-titulo"><strong class="dialogo-titulo"></strong></p>
+            <p class="dialogo-nombre"></p>
+            <p class="ayuda dialogo-ayuda"></p>
+            <span class="dialogo-campos" hidden></span>
+            <div class="dialogo-botones">
+                <button class="boton" type="button" data-cerrar>Cancelar</button>
+                <button class="boton boton-acento dialogo-boton" type="submit"></button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+{% include "_guion_comun.js" %}
+
+        // Buscador (Ctrl K): pide los resultados al portal mientras se escribe
+        const buscador = document.getElementById("buscador");
+        const buscadorTexto = document.getElementById("buscador-texto");
+        const buscadorLista = document.getElementById("buscador-lista");
+        let buscarEspera;
+        async function buscarAhora() {
+            try {
+                const r = await fetch("/buscar?q=" + encodeURIComponent(buscadorTexto.value));
+                buscadorLista.innerHTML = await r.text();
+            } catch (e) {}
+        }
+        function abrirBuscador() {
+            if (buscador.open) return;
+            buscadorTexto.value = "";
+            buscarAhora();
+            buscador.showModal();
+            buscadorTexto.focus();
+        }
+        function moverSeleccion(paso) {
+            const enlaces = Array.from(buscadorLista.querySelectorAll("a"));
+            if (!enlaces.length) return;
+            const i = enlaces.findIndex(a => a.classList.contains("sel"));
+            enlaces.forEach(a => a.classList.remove("sel"));
+            const nuevo = enlaces[(i + paso + enlaces.length) % enlaces.length];
+            nuevo.classList.add("sel");
+            nuevo.scrollIntoView({ block: "nearest" });
+        }
+        document.getElementById("abrir-buscador")?.addEventListener("click", e => { e.preventDefault(); abrirBuscador(); });
+        buscadorTexto.addEventListener("input", () => { clearTimeout(buscarEspera); buscarEspera = setTimeout(buscarAhora, 120); });
+        buscadorTexto.addEventListener("keydown", e => {
+            if (e.key === "ArrowDown") { e.preventDefault(); moverSeleccion(1); }
+            if (e.key === "ArrowUp") { e.preventDefault(); moverSeleccion(-1); }
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const elegido = buscadorLista.querySelector("a.sel") || buscadorLista.querySelector("a");
+                if (elegido) { buscador.close(); location.href = elegido.href; }
+            }
+        });
+        // Fuera de la caja se cierra; al elegir un resultado también (si es de la misma página, se quedaría encima)
+        buscador.addEventListener("click", e => { if (e.target === buscador || e.target.closest("a")) buscador.close(); });
+        document.addEventListener("keydown", e => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && document.getElementById("abrir-buscador")) { e.preventDefault(); abrirBuscador(); }
+        });
+
+        // Globo al pasar el ratón por algo con data-info (el mapa de Inicio, los códigos)
+        const globo = document.getElementById("globo");
+        document.addEventListener("mousemove", e => {
+            const c = e.target.closest && e.target.closest("[data-info]");
+            if (!c) { globo.style.display = "none"; return; }
+            globo.textContent = c.dataset.info;
+            globo.style.display = "block";
+            globo.style.left = Math.min(e.clientX + 14, innerWidth - 310) + "px";
+            globo.style.top = (e.clientY + 16) + "px";
+        });
+    </script>
+</body>
+</html>
