@@ -127,3 +127,20 @@ def test_la_skill_no_pide_contrasenas():
 def test_los_manuales_dicen_como_pedir_ayuda_a_la_skill():
     assert "ayúdame a instalar el portal" in INSTALAR
     assert "help me install the portal" in (RAIZ / "docs" / "en" / "install.md").read_text(encoding="utf-8")
+
+
+# --- La portada del repositorio (README) ---
+
+def test_los_enlaces_de_la_portada_llevan_a_archivos_que_existen():
+    portada = (RAIZ / "README.md").read_text(encoding="utf-8")
+    enlaces = re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", portada)
+    locales = [e for e in enlaces if not e.startswith("http")]
+    assert "docs/capturas/inicio.png" in locales and "docs/instalar.md" in locales and "LICENSE" in locales
+    faltan = [e for e in locales if not (RAIZ / e).is_file()]
+    assert not faltan, faltan
+
+
+def test_la_portada_dice_quien_lo_ha_hecho_y_la_licencia():
+    portada = (RAIZ / "README.md").read_text(encoding="utf-8")
+    assert "Desarrollado en Movired por Pau Aracil." in portada
+    assert "PolyForm Internal Use 1.0.0" in portada and "no certifica nada" in portada
