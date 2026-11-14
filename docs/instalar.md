@@ -47,7 +47,7 @@ manual basta.
 
 ## Descargar y arrancar
 
-1. **Descarga el portal.** En la página del repositorio en GitHub, botón verde **«Code» → «Download ZIP»**.
+1. **Descarga el portal.** En la página del repositorio en GitHub, [github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001), botón verde **«Code» → «Download ZIP»**.
 2. **Descomprímelo** en una carpeta tuya, por ejemplo `C:\Portal ISO 42001`. Esta es la **carpeta del programa**. Tus
    datos no van aquí: van en otra carpeta, para que actualizar o borrar el programa no los toque.
 3. **Haz doble clic en `arrancar.bat`**, dentro de esa carpeta.
@@ -344,7 +344,7 @@ El portal tiene una **licencia de uso interno** (PolyForm Internal Use 1.0.0). E
 
 - **Puedes** usarlo y modificarlo para el trabajo interno de tu empresa; todos los que trabajan en ella pueden usarlo.
 - **No puedes** pasarle una copia a otra empresa ni a nadie de fuera: quien lo quiera, que lo descargue del repositorio
-  de GitHub.
+  de GitHub, [github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001).
 - **Tampoco puedes** venderlo, ofrecerlo como servicio a otros ni instalarlo a un cliente.
 
 Esto es un resumen: el texto que vale es el del fichero `LICENSE`, en inglés. También se ve en el portal, en el enlace

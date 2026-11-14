@@ -51,7 +51,8 @@ portal y escribe «ayúdame a instalar el portal»: te acompaña paso a paso.
 El portal tiene una **licencia de uso interno** ([PolyForm Internal Use 1.0.0](LICENSE)). En resumen:
 
 - **Puedes** usarlo y modificarlo para el trabajo interno de tu empresa; todos los que trabajan en ella pueden usarlo.
-- **No puedes** pasarle una copia a otra empresa ni a nadie de fuera: quien lo quiera, que lo descargue de aquí.
+- **No puedes** pasarle una copia a otra empresa ni a nadie de fuera: quien lo quiera, que lo descargue de aquí,
+  [github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001).
 - **Tampoco puedes** venderlo, ofrecerlo como servicio a otros ni instalarlo a un cliente.
 
 Esto es un resumen: el texto que vale es el de [`LICENSE`](LICENSE).
@@ -81,5 +82,6 @@ your team. The portal itself is in Spanish; your browser can translate it.
 
 **License:** internal use only ([PolyForm Internal Use 1.0.0](LICENSE)). You may use and modify it for your company's
 internal work. You may not give a copy to anyone outside your company, sell it, offer it as a service or install it for
-a client: whoever wants it should download it from here. It does not certify anything and is not related to or
+a client: whoever wants it should download it from here,
+[github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001). It does not certify anything and is not related to or
 endorsed by ISO or IEC.

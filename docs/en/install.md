@@ -52,7 +52,7 @@ portal. Without Claude Code, this manual is enough.
 
 ## Download and start
 
-1. **Download the portal.** On the repository page on GitHub, green button **«Code» → «Download ZIP»**.
+1. **Download the portal.** On the repository page on GitHub, [github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001), green button **«Code» → «Download ZIP»**.
 2. **Unzip it** into a folder of yours, for example `C:\Portal ISO 42001`. This is the **program folder**. Your data
    does not go here: it goes in another folder, so that updating or deleting the program does not touch it.
 3. **Double-click `arrancar.bat`**, inside that folder.
@@ -355,7 +355,7 @@ The portal has an **internal use license** (PolyForm Internal Use 1.0.0). In sho
 
 - **You may** use it and modify it for your company's internal work; everyone who works there can use it.
 - **You may not** give a copy to another company or to anyone outside: whoever wants it should download it from the
-  GitHub repository.
+  GitHub repository, [github.com/aracilpau/portal-iso42001](https://github.com/aracilpau/portal-iso42001).
 - **Nor may you** sell it, offer it as a service to others or install it for a client.
 
 This is a summary: the text that applies is the one in the `LICENSE` file. It can also be seen in the portal, in the
