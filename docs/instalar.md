@@ -357,3 +357,4 @@ Esto es un resumen: el texto que vale es el del fichero `LICENSE`, en inglés. T
   ellas.
 - Lo que redacta la IA son **borradores**: revísalos antes de usarlos.
 - Se ofrece tal cual, sin garantías. Haz copias de seguridad.
+- **Si ves el portal a la venta**, ofrecido como servicio o instalado a clientes, avísanos: [pauaracil@mvdataworks.com](mailto:pauaracil@mvdataworks.com).

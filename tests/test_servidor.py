@@ -174,7 +174,7 @@ def test_el_programa_de_cuentas_va_al_mysql_salvo_que_se_diga_local(tmp_path, mo
 
 
 def test_la_conexion_con_el_mysql_se_cifra_si_el_servidor_lo_permite():
-    # pymysql cifra solo (desde la 2.2.8) si no se le dice nada; el portal no le dice nada. Si una versión
+    # pymysql cifra solo (la 1.2.3, la mínima de requirements.txt, ya lo hace) si no se le dice nada; el portal no le dice nada. Si una versión
     # nueva dejara de hacerlo, esta prueba avisa. Sin conectar a ningún MySQL (defer_connect)
     import pymysql
     con = pymysql.connect(host="mibase.ejemplo.com", user="portal", password="x", database="iso42001",

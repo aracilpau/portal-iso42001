@@ -125,3 +125,16 @@ def test_el_portal_de_siempre_no_dice_prueba(tmp_path):
     with en_portal(tmp_path / "general" / "portal.db", prueba=True) as cliente:
         html = cliente.get("/").text
     assert ">PRUEBA</span>" in html and "<title>PRUEBA · " in html
+
+
+def test_las_versiones_minimas_de_requirements_existen_y_estan_instaladas():
+    # Si requirements.txt pide una versión que no existe, arrancar.bat falla en un ordenador nuevo (pasó con pymysql)
+    from importlib.metadata import version
+    from pathlib import Path
+
+    from packaging.requirements import Requirement
+    lineas = (Path(__file__).resolve().parent.parent / "requirements.txt").read_text(encoding="utf-8").splitlines()
+    for linea in lineas:
+        if linea.strip() and not linea.startswith("#"):
+            req = Requirement(linea)
+            assert req.specifier.contains(version(req.name), prereleases=True), f"{req}: instalada {version(req.name)}"

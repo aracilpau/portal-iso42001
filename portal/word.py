@@ -7,6 +7,8 @@ resaltados en amarillo para que no se escape ninguno.
 """
 import io
 import re
+import zipfile
+from datetime import datetime
 
 POR_COMPLETAR = re.compile(r"(\[(?:POR COMPLETAR|A CONFIRMAR)[^\]]*\])")
 _NEGRITA = re.compile(r"(\*\*[^*]+\*\*)")
@@ -31,6 +33,33 @@ def _texto(parrafo, linea: str) -> None:
 
 def _celdas(linea: str) -> list[str]:
     return [c.strip() for c in linea.strip().strip("|").split("|")]
+
+
+# La marca de todos los Word y PDF que genera el portal: en las propiedades del archivo (clic derecho, «Propiedades»,
+# «Detalles»), nunca en el texto que lee el auditor. Dice con qué programa se hizo, no quién es el autor
+PROGRAMA = "Portal ISO 42001 · Desarrollado en Movired"
+COMENTARIO = "Generado con el Portal ISO 42001. Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0."
+
+
+def guardar(doc) -> bytes:
+    """Guarda un Word de python-docx con la marca en sus propiedades (y sin las de la librería: «python-docx» como
+    autor, «Microsoft Macintosh Word» como programa y la fecha de 2013 de su plantilla)."""
+    propiedades = doc.core_properties
+    propiedades.author = ""
+    propiedades.last_modified_by = ""
+    propiedades.comments = COMENTARIO
+    propiedades.created = propiedades.modified = datetime.now()
+    salida = io.BytesIO()
+    doc.save(salida)
+    entrada, salida = zipfile.ZipFile(io.BytesIO(salida.getvalue())), io.BytesIO()
+    with zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as nuevo:
+        for parte in entrada.infolist():
+            datos = entrada.read(parte)
+            if parte.filename == "docProps/app.xml":
+                datos = re.sub(rb"<Application>[^<]*</Application>",
+                               f"<Application>{PROGRAMA}</Application>".encode("utf-8"), datos)
+            nuevo.writestr(parte, datos)
+    return salida.getvalue()
 
 
 def documento(texto: str, aviso: str = "", unir_lineas: bool = False) -> bytes:
@@ -81,6 +110,4 @@ def documento(texto: str, aviso: str = "", unir_lineas: bool = False) -> bytes:
                 partes.append(lineas[i].strip())
             _texto(doc.add_paragraph(), " ".join(partes))
         i += 1
-    salida = io.BytesIO()
-    doc.save(salida)
-    return salida.getvalue()
+    return guardar(doc)

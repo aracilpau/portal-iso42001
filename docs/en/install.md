@@ -367,3 +367,4 @@ This is a summary: the text that applies is the one in the `LICENSE` file. It ca
 - ISO/IEC 42001 is a standard by ISO and IEC. This portal is not related to or endorsed by those organizations.
 - What the AI writes are **drafts**: review them before using them.
 - It is offered as is, without warranties. Make backups.
+- **If you see the portal for sale**, offered as a service or installed for clients, let us know: [pauaracil@mvdataworks.com](mailto:pauaracil@mvdataworks.com).

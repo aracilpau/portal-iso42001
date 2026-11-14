@@ -421,8 +421,8 @@ LLANO_PUNTOS = {
               "estudio."),
     "4.1.b": ("Lo de dentro que os afecta.",
               "Cómo está organizada la empresa, qué contratos os obligan a algo con la IA y para qué la usáis. Por "
-              "ejemplo: «El equipo comercial usa ChatGPT para redactar ofertas; el contrato con un cliente prohíbe meter "
-              "sus datos en herramientas de fuera»."),
+              "ejemplo: «El equipo comercial usa ChatGPT para redactar ofertas; el contrato con una cadena de ópticas "
+              "prohíbe meter sus datos en herramientas de fuera»."),
     "4.1.c": ("Qué papel tenéis con la IA.",
               "Una frase clara: la desarrolláis, la metéis en vuestros productos o solo usáis la de otros (como ChatGPT o "
               "Copilot). Puede ser más de uno. Importa mucho: de esto depende qué controles del Anexo A os tocan."),
@@ -435,13 +435,13 @@ LLANO_PUNTOS = {
               "un chatbot atiende a vuestros clientes, los clientes van en la lista."),
     "4.2.b": ("Qué espera cada uno.",
               "Al lado de cada grupo, qué espera de vuestra IA. Por ejemplo: los clientes, «saber cuándo les responde una "
-              "IA y no una persona»; la plantilla, «que la IA no se use para vigilarla»."),
+              "IA y no una persona»; la plantilla, «que la IA no se use para contar las pausas del café»."),
     "4.2.c": ("Qué os comprometéis a cumplir.",
               "Una columna «¿Lo asumimos?» con sí o no y, si es no, el motivo. Lo que digáis que sí hay que cumplirlo "
               "después: mejor pocas cosas y realistas."),
     "4.3.a": ("Qué entra y qué no.",
               "Qué departamentos, qué procesos, qué sistemas de IA y qué oficinas. Por ejemplo: «Entran todas las áreas de "
-              "la oficina de Madrid y los cinco sistemas del inventario; queda fuera la filial de Portugal»."),
+              "la oficina de Madrid y los siete sistemas del inventario; queda fuera el almacén de Teruel»."),
     "4.3.b": ("Que cuadre con la 4.1 y la 4.2.",
               "Si en el contexto decís que vuestra IA más importante es el chatbot de clientes, el chatbot tiene que "
               "estar dentro. El auditor compara los tres documentos."),
@@ -449,7 +449,7 @@ LLANO_PUNTOS = {
               "El documento aprobado y guardado donde lo pueda abrir quien lo necesite. Es de lo primero que pide el "
               "auditor."),
     "4.3.d": ("Explicar lo que se deja fuera.",
-              "Una línea con el motivo de cada cosa excluida, por ejemplo: «La filial de Portugal no usa IA». Es "
+              "Una línea con el motivo de cada cosa excluida, por ejemplo: «El almacén de Teruel no usa IA». Es "
               "recomendable, no obligatorio, pero el auditor desconfía si se deja fuera justo lo difícil sin explicar "
               "por qué."),
     "5.1.a": ("Que haya política y objetivos.",

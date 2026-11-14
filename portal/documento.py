@@ -3,7 +3,6 @@
 
 Se genera solo al pedirlo, con lo que haya decidido en ese momento.
 """
-import io
 from dataclasses import dataclass
 from datetime import date
 
@@ -13,7 +12,7 @@ from docx.shared import Cm, Pt
 from fpdf import FPDF
 from fpdf.fonts import FontFace
 
-from portal import guia
+from portal import guia, word as conversor
 from portal.db import Decision
 
 TITULO = "Declaración de Aplicabilidad"
@@ -83,9 +82,7 @@ def word(fs: list[Fila], espacio: str, hoy: date) -> bytes:
         for celda, ancho in zip(fila.cells, (2.2, 6, 2.4, 11.5, 2.6)):
             celda.width = Cm(ancho)
 
-    salida = io.BytesIO()
-    doc.save(salida)
-    return salida.getvalue()
+    return conversor.guardar(doc)
 
 
 def _latin(texto: str) -> str:
@@ -97,6 +94,8 @@ def _latin(texto: str) -> str:
 
 def pdf(fs: list[Fila], espacio: str, hoy: date) -> bytes:
     doc = FPDF(orientation="L", format="A4")
+    doc.set_creator(conversor.PROGRAMA)  # la marca, en las propiedades: no sale en el texto
+    doc.set_subject(conversor.COMENTARIO)
     doc.set_auto_page_break(True, margin=15)
     doc.set_margins(15, 15, 15)
     doc.add_page()

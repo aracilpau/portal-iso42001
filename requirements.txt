@@ -11,4 +11,4 @@ claude-agent-sdk
 pypdf
 pywin32
 winotify
-pymysql>=2.2.8
+pymysql>=1.2.3
