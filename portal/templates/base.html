@@ -27,12 +27,12 @@
             <a href="/contrasena">Cambiar contraseña</a>
             <form method="post" action="/salir"><button type="submit">Salir</button></form>
             {% if sesion.empresa %}
-            <a class="ajustes-icono" href="/ajustes" title="Ajustes" aria-label="Ajustes" {% if seccion == 'ajustes' %}aria-current="page"{% endif %}>⚙</a>
+            <a class="ajustes-icono" href="/ajustes" title="Ajustes" aria-label="Ajustes" {% if seccion == 'ajustes' %}aria-current="page"{% endif %}>⚙ Ajustes</a>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {# Estilo «Mesa de control»: el menú arriba, como una web, y el buscador a mano #}
+    {# Estilo «Plano»: el menú arriba, como una web, y el buscador a mano #}
     <header class="barra">
         <div class="barra-dentro">
             <a class="logo" href="/"><b>42001</b><span>Sistema de gestión<br>de la IA</span>

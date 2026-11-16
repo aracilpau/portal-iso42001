@@ -4,7 +4,7 @@ Cómo se usa el portal, pantalla a pantalla. El chat del portal («Preguntar») 
 el uso del portal. Cómo instalarlo, actualizarlo y hacer copias de seguridad, en [`instalar.md`](instalar.md); la licencia (solo uso interno), en
 su [aviso legal](instalar.md#aviso-legal).
 
-El portal tiene un solo estilo, **Mesa de control**: el menú arriba, con el buscador y el botón «Preguntar».
+El portal tiene un solo estilo, **Plano**, con modo claro y oscuro: el menú arriba, con el buscador y el botón «Preguntar».
 
 ## Índice
 

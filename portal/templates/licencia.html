@@ -3,6 +3,7 @@
 {% block titulo %}Licencia · Portal ISO/IEC 42001{% endblock %}
 
 {% block contenido %}
+<p class="volver"><a href="/">← Volver al portal</a></p>
 {# La licencia en llano y, debajo, el texto que vale legalmente (el de LICENSE, en inglés) #}
 <header class="saludo">
     <div>
@@ -22,5 +23,5 @@
 
 <p>Esto es un resumen. El texto que vale es el de la licencia, en inglés:</p>
 
-<pre class="licencia-texto">{{ texto }}</pre>
+<div class="licencia-texto" lang="en">{{ texto }}</div>
 {% endblock %}

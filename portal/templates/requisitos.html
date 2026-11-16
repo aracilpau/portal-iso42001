@@ -45,9 +45,8 @@
             <td class="col-tipo">{% for c in r.como %}<span class="etq">{{ c }}</span> {% endfor %}</td>
             <td class="col-cuanto">{{ r.cada_cuanto|join(' · ') }}</td>
             <td class="col-av">{% if e == 'noaplica' %}<span class="sub">—</span>{% else %}
-                <div class="mini"><div class="mini-barra{% if e == 'hecho' %} ok{% endif %}"><span style="width: {{ av.porcentaje }}%"></span></div>
-                    <b>{{ av.porcentaje }}%</b></div>
-                <span class="sub">{{ av.hechos }} de {{ av.total }}</span>{% endif %}</td>
+                <div class="mini"><div class="mini-barra{% if e == 'hecho' %} ok{% endif %}"><span style="width: {{ av.porcentaje }}%"></span></div></div>
+                <span class="sub">{{ av.hechos }} de {{ av.total }} · <b>{{ av.porcentaje }} %</b></span>{% endif %}</td>
             <td class="col-est"><span class="sello {{ NOMBRES[e][1] }}">{{ NOMBRES[e][0] }}</span></td>
         </tr>
         {% endfor %}

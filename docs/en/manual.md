@@ -4,8 +4,8 @@ How to use the portal, screen by screen. The portal's chat («Preguntar», Ask) 
 using the portal. How to install it, update it and make backups is in [`install.md`](install.md); the license (internal
 use only), in its [legal notice](install.md#legal-notice).
 
-The portal has a single style, **«Mesa de control» (Control desk)**: the menu at the top, with the search box and the
-«Preguntar» (Ask) button.
+The portal has a single style, **«Plano» (Blueprint)**, with a light and a dark mode: the menu at the top, with the search box
+and the «Preguntar» (Ask) button.
 
 **About the language:** the portal's screens are in Spanish. Chrome and Edge can translate them: click the translate
 icon in the address bar, or right-click on the page → "Translate to English". Some words may come out odd, because it

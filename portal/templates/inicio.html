@@ -4,8 +4,9 @@
 {% block contenido %}
 {# Lo que hay que hacer, ordenado por urgencia: los avisos viven aquí #}
 {% set n = hay.vencidos|length + hay.pronto|length + hay.recordatorios|length + hay.pregunta|length + hay.altas|length %}
+{# El saludo, en una lámina sobre una mancha de color: el único sitio de color fuerte junto al mapa #}
 <section class="saludo">
-    <div>
+    <div class="mancha"><div class="lamina">
         <p class="antetitulo">{{ hoy|fecha_larga }} · {{ espacio.nombre }}</p>
         <h1 class="titular">{% if n %}Te queda{{ 'n' if n != 1 }} <em>{{ n }} cosa{{ 's' if n != 1 }}</em><br>por hacer.{% else %}Todo <em>al día</em>.{% endif %}</h1>
         <p>
@@ -15,8 +16,8 @@
             {% elif n %}Nada vencido ni a punto de vencer.
             {% else %}No hay nada vencido, nada que venza pronto ni recordatorios pendientes.{% endif %}
         </p>
-    </div>
-    <a class="boton boton-acento" href="/requisitos?ver=pendientes">Ver todo lo pendiente →</a>
+        <a class="boton boton-acento" href="/requisitos?ver=pendientes">Ver todo lo pendiente →</a>
+    </div></div>
 </section>
 
 <div class="inicio">

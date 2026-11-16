@@ -5,6 +5,7 @@ Se arranca desde la carpeta del proyecto con `uvicorn portal.main:app` (o con ar
 """
 import io
 import json
+import re
 import secrets
 import threading
 from contextlib import asynccontextmanager
@@ -20,6 +21,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 
 from guia import datos as guia
 from portal import avisos as correo, borradores, chat, config, cuentas, db, documento, ia, instalar, lectura, pendiente, propuestas, pruebas, revision93, revisor, seguimiento
@@ -28,7 +30,7 @@ from portal import guia as guia_portal
 
 AQUI = Path(__file__).resolve().parent
 
-# Un solo estilo, «Mesa de control»
+# Un solo estilo, «Plano» (antes «Mesa de control»; el fichero sigue llamándose mesa.css)
 plantillas = Jinja2Templates(directory=AQUI / "templates")
 plantillas.env.globals.update(clase=seguimiento.clase, PROPIO=seguimiento.PROPIO,
                               APOYADO=seguimiento.APOYADO, SISTEMA=seguimiento.SISTEMA,
@@ -145,9 +147,26 @@ FILTROS = {
     "noaplica": ("No aplican", ("noaplica",)),
 }
 
+
+def licencia_html(texto: str) -> Markup:
+    """El texto de LICENSE (Markdown sencillo) en HTML, para que no se vean «##» ni «**» en la página."""
+    bloques = []
+    for bloque in re.split(r"\n\s*\n", texto.strip()):
+        b = str(escape(bloque.strip()))
+        b = re.sub(r"&lt;(https?://[^&]+)&gt;", r'<a href="\1">\1</a>', b)
+        b = re.sub(r"\[([^\]]+)\]\(#[^)]+\)", r"\1", b)  # los enlaces internos, como texto
+        b = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", b, flags=re.S)
+        b = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", b, flags=re.S)
+        if b.startswith("## "):
+            bloques.append(f"<h3>{b[3:]}</h3>")
+        elif b.startswith("# "):
+            bloques.append(f"<h2>{b[2:]}</h2>")
+        else:
+            bloques.append(f"<p>{b}</p>")
+    return Markup("\n".join(bloques))
+
+
 # El nombre que se ve de cada empresa es el de cuentas.db (o el MySQL), no el de su espacio
-
-
 @dataclass
 class Sesion:
     """Quién está mirando y en qué empresa. Se guardan en memoria: al arrancar el portal, hay que volver a
@@ -361,7 +380,7 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
     def licencia(request: Request):
         """La licencia en llano y su texto, que vale legalmente. Se ve sin entrar y sin el MySQL."""
         texto = (config.RAIZ / "LICENSE").read_text(encoding="utf-8")
-        return plantillas.TemplateResponse(request, "licencia.html", {"texto": texto})
+        return plantillas.TemplateResponse(request, "licencia.html", {"texto": licencia_html(texto)})
 
     # --- Entrar, elegir empresa y salir ---
 
