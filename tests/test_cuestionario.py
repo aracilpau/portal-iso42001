@@ -58,18 +58,18 @@ def test_la_comprobacion_pilla_un_control_sin_pregunta(monkeypatch):
 
 def test_esta_en_empresa_y_la_declaracion_dice_cuanto_falta(cliente):
     html = cliente.get("/empresa").text
-    assert "0 de 29 aclaradas" in html  # 4 datos, 10 de Sí/No y 15 abiertas
+    assert "0 de 29 preguntas contestadas" in html  # 4 datos, 10 de Sí/No y 15 abiertas
     for q in guia_portal.PREGUNTAS:
         assert f'hx-post="/empresa/respuesta/{q.clave}"' in html
     assert 'placeholder="Ej.: Ejemplo, S.L."' in html
     declaracion = cliente.get("/declaracion").text
-    assert "Quedan 14 de 14 preguntas de" in declaracion and 'href="/empresa#cuestionario"' in declaracion
+    assert "Quedan 14 de las 14 respuestas de" in declaracion and 'href="/empresa#cuestionario"' in declaracion
     assert declaracion.index('id="cuestionario"') < declaracion.index('id="control-A.2.2"')
 
 
 def test_contestar_se_guarda_solo_y_se_ve_al_volver(cliente, bd):
     r = cliente.post("/declaracion/cuestionario/entrena", data={"valor": "no"}, headers=HX)
-    assert 'id="cuestionario-estado"' in r.text and "1 de 29 aclaradas" in r.text and "Guardado a las" in r.text
+    assert 'id="cuestionario-estado"' in r.text and "1 de 29 preguntas contestadas" in r.text and "Guardado a las" in r.text
     assert 'value="no" checked' in pregunta(cliente.get("/empresa").text, "entrena")
     cliente.post("/declaracion/cuestionario/nombre", data={"valor": "Ejemplo, S.L."}, headers=HX)
     assert 'id="empresa-nombre" name="valor" type="text" value="Ejemplo, S.L."' in cliente.get("/empresa").text
@@ -84,14 +84,14 @@ def test_completo_deja_de_avisar_y_no_lo_se_queda_por_aclarar(cliente):
         cliente.post(f"/declaracion/cuestionario/{q.clave}", data={"valor": "nose"}, headers=HX)
     for clave, _, _ in guia_portal.DATOS_EMPRESA:
         cliente.post(f"/declaracion/cuestionario/{clave}", data={"valor": "x"}, headers=HX)
-    assert "Quedan 10 de 14 preguntas de" in cliente.get("/declaracion").text
-    assert "4 de 29 aclaradas" in cliente.get("/empresa").text
+    assert "Quedan 10 de las 14 respuestas de" in cliente.get("/declaracion").text
+    assert "4 de 29 preguntas contestadas" in cliente.get("/empresa").text
     for q in guia_portal.PREGUNTAS:
         cliente.post(f"/declaracion/cuestionario/{q.clave}", data={"valor": "no"}, headers=HX)
     html = cliente.get("/declaracion").text
     assert "Quedan" not in html[html.index('id="cuestionario"'):html.index("</p>", html.index('id="cuestionario"'))]
     # Sin desarrollar IA, el bloque 5 no cuenta: 4 + 10 + 12 abiertas
-    assert "14 de 26 aclaradas" in cliente.get("/empresa").text
+    assert "14 de 26 preguntas contestadas" in cliente.get("/empresa").text
 
 
 def test_el_inventario_sugiere_las_preguntas_1_y_8(cliente):
@@ -101,8 +101,8 @@ def test_el_inventario_sugiere_las_preguntas_1_y_8(cliente):
     cliente.post("/inventario", data={"nombre": "ChatGPT", "tipo": "herramienta"})
     html = cliente.get("/empresa").text
     desarrolla, proveedores = pregunta(html, "desarrolla"), pregunta(html, "proveedores")
-    assert 'value="si" checked' in desarrolla and "Según tu inventario: Asistente es del producto." in desarrolla
-    assert 'value="si" checked' in proveedores and "ChatGPT es una herramienta de uso" in proveedores
+    assert 'value="si" checked' in desarrolla and "Según tu inventario: Asistente es una IA que ofrecéis a clientes." in desarrolla
+    assert 'value="si" checked' in proveedores and "ChatGPT es una IA que usa el equipo" in proveedores
     # Contestado a mano, manda lo contestado y la nota desaparece
     r = cliente.post("/declaracion/cuestionario/desarrolla", data={"valor": "no"}, headers=HX)
     assert '<span id="nota-desarrolla" class="cuestionario-nota" hx-swap-oob="true"></span>' in r.text

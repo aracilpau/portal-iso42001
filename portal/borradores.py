@@ -127,7 +127,7 @@ def donde(codigo: str) -> Destino:
         if p.codigo in cubre or p.codigo in firmado:
             continue
         if p.apoyos:
-            como = f"se cumple solo con {', '.join(p.apoyos)}: no hace falta subir nada"
+            como = f"se marca solo cuando completes {' y '.join(p.apoyos)}; no hace falta subir nada"
         else:
             como = (p.explicacion or p.te_pediran).rstrip(".") or p.tipo.lower()
         aparte.append((p.codigo, como if como[-1] in ".?!»…" else como + "."))

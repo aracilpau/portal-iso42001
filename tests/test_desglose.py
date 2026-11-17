@@ -10,7 +10,8 @@ from portal.db import Marca, Sistema
 from portal.main import crear_app
 from conftest import en_portal, entrar
 from portal.pruebas import Pruebas
-from portal.seguimiento import (APOYADO, CUMPLIDO, PENDIENTE, PROPIO, VENCIDO, Seguimiento, toca)
+from portal.seguimiento import (APOYADO, CUMPLIDO, NO_HACE_FALTA, PENDIENTE, PROPIO, VENCIDO, Avance, Seguimiento,
+                                toca)
 
 DIA = date(2026, 3, 15)
 POLITICA = ["5.2.a", "5.2.b", "5.2.c", "5.2.d", "5.2.e", "5.2.f"]
@@ -78,10 +79,23 @@ def test_sin_inventario_quedan_pendientes():
     assert est.estado(punto("A.6.2.2.a")) == PENDIENTE
 
 
-def test_con_solo_herramientas_los_de_producto_cuentan_como_hechos():
+def test_con_solo_herramientas_los_de_producto_no_hacen_falta_por_ahora():
+    # Ni hechos (como era antes) ni pendientes; el requisito no cuenta en ningún porcentaje
     est = Seguimiento(set(), sistemas=[CHAT])
-    assert est.estado(punto("A.6.2.2.a")) == CUMPLIDO
+    assert est.estado(punto("A.6.2.2.a")) == NO_HACE_FALTA and not est.cumplido(punto("A.6.2.2.a"))
     assert est.estado(punto("A.5.4.a")) == PENDIENTE  # este sí le toca a ChatGPT
+    assert est.no_hace_falta("A.6.2.2") and est.avance("A.6.2.2").total == 0
+    assert est.completo("A.6.2.2")  # para lo que se apoya en él, no estorba
+    sobran = {r.codigo for r in est.sin_hacer_falta}
+    assert sobran == {"A.6.2.2", "A.6.2.3", "A.6.2.4", "A.6.2.5", "A.6.2.6", "A.6.2.7", "A.6.2.8", "A.8.2"}
+    assert est.controles == Avance(0, 30)  # 38 menos los 8 que no hacen falta
+    assert est.avance("4.4").total == 64 - 8
+
+
+def test_al_añadir_una_ia_que_se_ofrece_a_clientes_vuelven_a_estar_pendientes():
+    est = Seguimiento(set(), sistemas=[ASISTENTE, CHAT])
+    assert est.estado(punto("A.6.2.2.a")) == PENDIENTE
+    assert not est.no_hace_falta("A.6.2.2") and not est.sin_hacer_falta and est.controles.total == 38
 
 
 # --- Piezas: líneas, puntos y vencimientos ---
@@ -190,12 +204,12 @@ def test_marcar_una_linea_y_luego_la_otra(cliente):
     chat = añadir(cliente, "ChatGPT", "herramienta")
     assert cliente.post(linea("A.5.4", "A.5.4.a", asistente)).status_code == 200
     ficha = cliente.get("/requisitos/A.5.4").text
-    assert "1 de 2 sistemas" in ficha and "0 de 1 puntos" in ficha
+    assert "Hecho en 1 de 2 IA" in ficha and "0 de 1 puntos" in ficha
     cliente.post(linea("A.5.4", "A.5.4.a", chat))
     ficha = cliente.get("/requisitos/A.5.4").text
-    assert "2 de 2 sistemas" in ficha and "100<small>%</small>" in ficha
+    assert "Hecho en 2 de 2 IA" in ficha and "100<small>%</small>" in ficha
     cliente.post(linea("A.5.4", "A.5.4.a", chat, "desmarcar"))
-    assert "1 de 2 sistemas" in cliente.get("/requisitos/A.5.4").text
+    assert "Hecho en 1 de 2 IA" in cliente.get("/requisitos/A.5.4").text
 
 
 def test_los_de_solo_producto_solo_enseñan_la_linea_del_producto(cliente):
@@ -209,13 +223,17 @@ def test_los_de_solo_producto_solo_enseñan_la_linea_del_producto(cliente):
 def test_sin_producto_la_ficha_lo_dice(cliente):
     añadir(cliente, "ChatGPT", "herramienta")
     ficha = cliente.get("/requisitos/A.6.2.2").text
-    assert "No hay IA del producto en el" in ficha and "100<small>%</small>" in ficha
+    assert "No hace falta por ahora: solo es para la IA que ofrecéis a vuestros clientes" in ficha
+    assert "100<small>%</small>" not in ficha and "No hace falta por ahora</p>" in ficha  # ni hecho ni porcentaje
+    assert "No hace falta por ahora" in cliente.get("/requisitos").text
+    inicio = cliente.get("/").text
+    assert "0 de 30 que aplican" in inicio and "8 controles del Anexo A no hacen falta por ahora" in inicio
 
 
 def test_las_lineas_apoyadas_no_se_marcan_a_mano(cliente):
     chat = añadir(cliente, "ChatGPT", "herramienta")
     assert cliente.post(linea("A.9.4", "A.9.4.b", chat)).status_code == 400
-    assert "Se marcará solo cuando, para este sistema, esté completo: 7.3." in cliente.get("/requisitos/A.9.4").text
+    assert 'Se marca solo cuando, para esta IA, completes <a href="/requisitos/7.3">7.3</a>' in cliente.get("/requisitos/A.9.4").text
 
 
 def test_subir_y_quitar_un_archivo_de_una_linea(cliente):
@@ -256,7 +274,7 @@ def test_reabrir_tambien_desmarca_las_lineas(cliente):
     cliente.post(linea("A.5.4", "A.5.4.a", chat))
     assert 'data-confirmar="/requisitos/A.5.4/reabrir"' in cliente.get("/requisitos/A.5.4").text
     cliente.post("/requisitos/A.5.4/reabrir")
-    assert "0 de 1 sistema" in cliente.get("/requisitos/A.5.4").text
+    assert "Hecho en 0 de 1 IA" in cliente.get("/requisitos/A.5.4").text
 
 
 def test_vencimientos_por_linea_en_el_panel_y_en_ajustes(cliente, reloj):

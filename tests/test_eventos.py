@@ -116,7 +116,7 @@ def test_elegir_quitar_uno_y_reabrir(cliente):
         cliente.post(f"/requisitos/{p[:3]}/puntos/{p}/marcar")
     pagina = cliente.get("/eventos/persona").text
     assert 'value="7.2" checked' in pagina and 'value="7.3" checked' in pagina
-    assert "Se pone al día en la ficha" in pagina  # A.4.6 se cumple con el inventario
+    assert "No se reabre: revisa lo que toque en la ficha de cada IA" in pagina  # A.4.6 se cumple con el inventario
     assert f'data-info="{guia.requisito("7.2").resumen}"' in pagina  # la mini explicación al pasar el ratón
 
     r = cliente.post("/eventos/persona", data={"requisitos": ["7.2"]})  # se quita la 7.3
@@ -129,7 +129,7 @@ def test_elegir_quitar_uno_y_reabrir(cliente):
 
 def test_un_requisito_ya_pendiente_no_se_puede_elegir(cliente):
     pagina = cliente.get("/eventos/proveedor").text
-    assert "Nada que reabrir: ya está pendiente" in pagina and 'name="requisitos"' not in pagina
+    assert "Nada que volver a revisar: ya está pendiente" in pagina and 'name="requisitos"' not in pagina
 
 
 def test_una_situacion_que_no_existe(cliente):
@@ -155,7 +155,7 @@ def test_al_dar_de_alta_pregunta_y_reabre_lo_elegido(cliente):
     r = cliente.post("/inventario", data={"nombre": "Claude", "tipo": "herramienta"})
     assert "Has dado de alta «Claude»" in r.text
     assert 'value="8.2" checked' in r.text and 'value="A.10.3" checked' in r.text
-    assert "Nada que reabrir: ya está pendiente" in r.text  # la 8.3, sin nada marcado
+    assert "Nada que volver a revisar: ya está pendiente" in r.text  # la 8.3, sin nada marcado
 
     claude = r.url.path.rsplit("/", 1)[1]
     r = cliente.post(f"/inventario/{claude}/reabrir", data={"requisitos": ["8.2"]})  # se quita A.10.3

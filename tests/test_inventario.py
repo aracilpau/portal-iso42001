@@ -108,17 +108,17 @@ def test_añadir_rellenar_y_ver_los_puntos(cliente):
     chat = añadir(cliente, "Chat de la plantilla")
     asistente = añadir(cliente, "Asistente web", "producto")
     lista = cliente.get("/inventario").text
-    assert "Chat de la plantilla" in lista and "<b>0/5</b>" in lista
+    assert "Chat de la plantilla" in lista and "0 de 5 apartados rellenos" in lista
 
     cliente.post(f"/inventario/{chat}", data={"nombre": "Chat de la plantilla", "tipo": "herramienta", **LLENO})
     cliente.post(f"/inventario/{asistente}", data={"nombre": "Asistente web", "tipo": "producto",
                                                     "datos": "Preguntas de clientes"})
-    assert "<b>5/5</b>" in cliente.get("/inventario").text
+    assert "Ficha completa" in cliente.get("/inventario").text
     a43 = cliente.get("/requisitos/A.4.3").text
     assert "100<small>%</small>" in a43  # los dos tienen «datos»
     a44 = cliente.get("/requisitos/A.4.4").text
     assert "0 de 1 puntos" in a44 and "falta rellenar «Herramientas y modelos» en su ficha" in a44
-    assert "Se cumple solo con el campo <strong>«Herramientas y modelos»</strong>" in a44
+    assert "Se marca solo cuando rellenes el apartado <strong>«Herramientas y modelos»</strong>" in a44
 
     cliente.post(f"/inventario/{asistente}/retirar")
     assert "100<small>%</small>" in cliente.get("/requisitos/A.4.4").text  # el que faltaba, retirado
@@ -129,12 +129,12 @@ def test_añadir_rellenar_y_ver_los_puntos(cliente):
 
 def test_con_el_inventario_vacio_la_ficha_lo_dice(cliente):
     a43 = cliente.get("/requisitos/A.4.3").text
-    assert "Añade tus sistemas al" in a43 and "<strong>«Datos»</strong>" in a43
+    assert "Apunta vuestras IA en" in a43 and "<strong>«Datos»</strong>" in a43
 
 
 def test_errores_al_añadir_y_al_guardar_no_pierden_lo_escrito(cliente):
     r = cliente.post("/inventario", data={"nombre": "Chat", "tipo": ""})
-    assert "Elige si es del producto" in r.text and 'value="Chat"' in r.text
+    assert "Elige qué tipo de IA es" in r.text and 'value="Chat"' in r.text
     añadir(cliente, "Chat")
     r = cliente.post("/inventario", data={"nombre": "chat", "tipo": "producto"})
     assert "Ya hay un sistema que se llama «chat»." in r.text

@@ -738,7 +738,7 @@ def cambios(ruta: Path, espacio_id: int) -> list[sqlite3.Row]:
 
 # --- Inventario de IA ---
 
-TIPOS = {"producto": "Del producto", "herramienta": "Herramienta de uso"}
+TIPOS = {"producto": "La ofrecemos a clientes", "herramienta": "La usa el equipo"}
 CAMPOS = ("para_que", "datos", "herramientas", "infraestructura", "personas")
 
 

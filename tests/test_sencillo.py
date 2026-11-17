@@ -78,7 +78,7 @@ def test_el_historial_de_un_punto_se_ve_junto_a_sus_archivos(cliente):
 
 def test_el_reparto_explica_lo_que_va_por_sistema(cliente):
     ficha = cliente.get("/requisitos/8.4").text
-    assert "una vez por cada sistema de IA del inventario" in ficha
+    assert "una vez por cada IA de «Sistemas de IA»" in ficha
 
 
 def test_al_guardar_la_nota_se_ve_que_se_ha_guardado(cliente):
@@ -159,8 +159,8 @@ def test_la_ficha_de_un_sistema_se_guarda_sola(cliente):
     r = cliente.post(f"/inventario/{x}", data=datos, headers=HX)
     assert r.status_code == 200 and "Guardado a las" in r.text  # se queda en la ficha
     assert 'id="estado-datos" hx-swap-oob="true" class="sello s-ok"' in r.text  # el estado se pone al día
-    assert "1 de 5 campos" in r.text
-    assert "<b>1/5</b>" in cliente.get("/inventario").text
+    assert "1 de 5 apartados rellenos" in r.text
+    assert "1 de 5 apartados rellenos" in cliente.get("/inventario").text
 
     # Sin cambios no se apunta otra vez en «Actividad»
     cliente.post(f"/inventario/{x}", data=datos, headers=HX)
@@ -246,9 +246,9 @@ def test_reabrir_es_un_enlace_que_pide_confirmacion(cliente):
     completar_4_3(cliente)
     cliente.post("/requisitos/5.2/puntos/5.2.a/marcar")
     ficha = cliente.get("/requisitos/5.2").text
-    enlace = re.search(r'<button class="boton boton-mini"[^>]*>Reabrir 5.2</button>', ficha, re.S).group(0)
-    assert 'data-confirmar="/requisitos/5.2/reabrir"' in enlace and 'data-accion="Reabrir"' in enlace
-    assert "Sus puntos vuelven a pendiente hasta que los revises." in enlace
+    enlace = re.search(r'<button class="boton boton-mini"[^>]*>Volver a revisar 5.2</button>', ficha, re.S).group(0)
+    assert 'data-confirmar="/requisitos/5.2/reabrir"' in enlace and 'data-accion="Volver a revisar"' in enlace
+    assert "Sus puntos pasan a pendiente hasta que confirmes que siguen valiendo." in enlace
     assert "Ha cambiado algo: reabrir" not in ficha
     cliente.post("/requisitos/5.2/reabrir")  # lo que hace la confirmación
     assert 'data-confirmar="/requisitos/5.2/reabrir"' not in cliente.get("/requisitos/5.2").text

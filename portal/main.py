@@ -30,6 +30,22 @@ from portal import guia as guia_portal
 
 AQUI = Path(__file__).resolve().parent
 
+# Las columnas de la lista de requisitos, en llano (los valores de la guía no cambian: los usan las cuentas)
+COMO_SE_DEMUESTRA = {
+    "Documento": "un escrito aprobado (una política, un procedimiento).",
+    "Registro": "la prueba de que se hizo (un acta, una lista de asistencia, unos resultados).",
+    "Práctica": "el auditor lo comprueba mirando cómo trabajáis y preguntando a la gente.",
+    "Inventario": "se cubre con las fichas de «Empresa → Sistemas de IA».",
+    "Resumen": "no tiene trabajo propio: se completa al completar otros requisitos.",
+}
+CADA_CUANTO = {"Una vez y revisar": "Una vez y revisar cada año", "Periódico": "Varias veces al año",
+               "Por evento": "Cuando pasa algo"}
+CADA_CUANTO_AYUDA = {
+    "Una vez y revisar": "se hace una vez y se repasa en la revisión de cada año.",
+    "Periódico": "se repite a lo largo del año (el portal lo recuerda).",
+    "Por evento": "se revisa cuando pasa algo que le afecta (ver «¿Ha pasado algo?»).",
+}
+
 # Un solo estilo, «Plano» (antes «Mesa de control»; el fichero sigue llamándose mesa.css)
 plantillas = Jinja2Templates(directory=AQUI / "templates")
 plantillas.env.globals.update(clase=seguimiento.clase, PROPIO=seguimiento.PROPIO,
@@ -38,13 +54,22 @@ plantillas.env.globals.update(clase=seguimiento.clase, PROPIO=seguimiento.PROPIO
                               VENCE_PRONTO=seguimiento.VENCE_PRONTO, VENCIDO=seguimiento.VENCIDO,
                               FICHA=seguimiento.FICHA, CAMPO_DE=seguimiento.CAMPO_DE, TIPOS=db.TIPOS,
                               RECORDAR_POR_DEFECTO=seguimiento.RECORDAR_POR_DEFECTO,
-                              PREGUNTAR_POR_DEFECTO=seguimiento.PREGUNTAR_POR_DEFECTO)
+                              PREGUNTAR_POR_DEFECTO=seguimiento.PREGUNTAR_POR_DEFECTO,
+                              NO_HACE_FALTA=seguimiento.NO_HACE_FALTA,
+                              titulo_de={r.codigo: r.titulo for r in guia_portal.requisitos()},
+                              COMO_SE_DEMUESTRA=COMO_SE_DEMUESTRA, CADA_CUANTO=CADA_CUANTO,
+                              CADA_CUANTO_AYUDA=CADA_CUANTO_AYUDA)
 # Se añade a la dirección del estilo (mesa.css) y de htmx: si cambian, el navegador ve una dirección nueva
 # y no tira de la copia vieja que tenía guardada
 plantillas.env.globals["version"] = str(int(max(f.stat().st_mtime for f in (AQUI / "static").iterdir())))
+# La versión publicada (el fichero VERSION, que pone la copia pública): en el pie, para saber cuál se tiene
+_VERSION = (config.RAIZ / "VERSION").read_text(encoding="utf-8").strip() if (config.RAIZ / "VERSION").is_file() else ""
+plantillas.env.globals["version_portal"] = (f"Versión del {_VERSION[8:10]}/{_VERSION[5:7]}/{_VERSION[:4]}"
+                                            if len(_VERSION) >= 10 else "")
 plantillas.env.filters["seguro"] = pruebas.nombre_seguro  # el nombre de un sistema en carpetas e historial
 # Si un archivo del historial es de un punto (o de la línea de un sistema): su nombre empieza por él
 plantillas.env.tests["en_punto"] = lambda nombre, delante: nombre.startswith(delante + " - ")
+
 plantillas.env.filters["fecha"] = lambda d: d.strftime("%d/%m/%Y") if d else ""
 DIAS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
 MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
@@ -66,17 +91,17 @@ CAMPOS_FICHA = [
      "Se actualiza cada mes."),
     ("herramientas", "Herramientas y modelos", "A.4.4.a",
      "Qué modelo de IA hay detrás y de quién es (p. ej. GPT-4o de OpenAI), y con qué se desarrolla, prueba "
-     "o vigila. En una herramienta de uso basta con el producto y el modelo.",
-     "Ej.: GPT-4o de OpenAI (API), LangChain para orquestar, evaluaciones con Promptfoo."),
+     "o vigila. En una IA que usa el equipo basta con el nombre del programa y de quién es.",
+     "Ej.: ChatGPT Team, de OpenAI. (Si lo ha hecho vuestro equipo técnico, pídeles el modelo y las herramientas.)"),
     ("infraestructura", "Infraestructura", "A.4.5.a",
      "Dónde funciona: vuestros servidores, la nube (cuál y en qué región) o los del proveedor. En una "
      "herramienta externa, normalmente «en los servidores del proveedor».",
-     "Ej.: En la nube de Azure (Europa Oeste). Sin GPU propia: el modelo lo ejecuta OpenAI."),
+     "Ej.: En los servidores de OpenAI (es un servicio de internet)."),
     ("personas", "Personas", "A.4.6.a",
      "Quién interviene en cada fase (quién lo desarrolla o contrata, lo pone en marcha, lo mantiene y lo usa) "
      "y con qué formación. Si es un servicio que ofrecéis, incluye también quién lo usa del lado del cliente.",
-     "Ej.: Desarrollo: equipo de producto (2). Despliegue y operación: Luis (DevOps). "
-     "Revisión de respuestas: atención al cliente."),
+     "Ej.: Lo contrató Marta (dirección). Lo usa el equipo comercial (5 personas), con una formación de una hora. "
+     "Revisa las respuestas quien las usa."),
 ]
 
 # El nombre del campo que cumple cada punto, para decirlo en la ficha del requisito
@@ -144,7 +169,7 @@ FILTROS = {
     "pendientes": ("Pendientes", ("pendiente", "curso", "vencido")),
     "vencen": ("Vencen o vencidos", ("vencido", "pronto")),
     "completos": ("Completos", ("hecho", "pronto")),
-    "noaplica": ("No aplican", ("noaplica",)),
+    "noaplica": ("No aplican o no hacen falta", ("noaplica", "nohacefalta")),
 }
 
 
@@ -164,6 +189,28 @@ def licencia_html(texto: str) -> Markup:
         else:
             bloques.append(f"<p>{b}</p>")
     return Markup("\n".join(bloques))
+
+
+def _y(partes: list[str]) -> str:
+    return partes[0] if len(partes) == 1 else ", ".join(partes[:-1]) + " y " + partes[-1]
+
+
+def puntos_llano(codigos: list[str], actual: str, delante: str = "en ") -> Markup:
+    """Los puntos por su letra y su ficha: «en los puntos a, b y c de esta ficha y en el punto b de la ficha A.2.2
+    (Política de IA)», con enlaces. Para decir dónde se sube un borrador sin una lista de códigos."""
+    fichas: dict[str, list[str]] = {}
+    for c in codigos:
+        fichas.setdefault(seguimiento.REQUISITO_DE[c].codigo, []).append(c)
+    partes = []
+    for r, suyos in fichas.items():
+        letras = _y([f'<a href="/requisitos/{r}#{escape(c)}">{escape(c.rsplit(".", 1)[1])}</a>' for c in suyos])
+        donde = "de esta ficha" if r == actual else (
+            f'de la ficha <a href="/requisitos/{r}">{r}</a> ({escape(guia_portal.requisito(r).titulo)})')
+        partes.append(f"{delante}{'los puntos' if len(suyos) > 1 else 'el punto'} {letras} {donde}")
+    return Markup(_y(partes))
+
+
+plantillas.env.globals["puntos_llano"] = puntos_llano
 
 
 # El nombre que se ve de cada empresa es el de cuentas.db (o el MySQL), no el de su espacio
@@ -927,7 +974,8 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
         completo = " · completo" if est.completo(codigo) else ""
         lineas = [f"{codigo} {r.titulo}: {av.hechos} de {av.total} {'puntos' if r.puntos else 'requisitos'}{completo}"]
         nombres = {seguimiento.VENCIDO: "VENCIDO", seguimiento.VENCE_PRONTO: "vence pronto",
-                   seguimiento.CUMPLIDO: "cumplido", seguimiento.PENDIENTE: "pendiente"}
+                   seguimiento.CUMPLIDO: "cumplido", seguimiento.PENDIENTE: "pendiente",
+                   seguimiento.NO_HACE_FALTA: "no hace falta por ahora (solo IA del producto, y no hay)"}
         for p in r.puntos:
             c, estado_p = est.clase(p), est.estado(p)
             linea = f"- {p.codigo}: {nombres.get(estado_p, estado_p)}"
@@ -1064,7 +1112,8 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
 
     def estados_requisitos(est) -> dict[str, tuple[str, int]]:
         """Para el mapa de Inicio y la lista: el estado de cada requisito y su porcentaje.
-        Manda lo peor: vencido, vence pronto; luego completo, en curso o sin empezar."""
+        Manda lo peor: vencido, vence pronto; luego completo, en curso o sin empezar. Los que no aplican o no hacen
+        falta por ahora, aparte."""
         vencidos = {a.requisito.codigo for a in est.avisos(seguimiento.VENCIDO)}
         pronto = {a.requisito.codigo for a in est.avisos(seguimiento.VENCE_PRONTO)}
         res = {}
@@ -1072,6 +1121,8 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
             pct = est.avance(r.codigo).porcentaje
             if not est.aplica(r.codigo):
                 res[r.codigo] = ("noaplica", 0)
+            elif est.no_hace_falta(r.codigo):
+                res[r.codigo] = ("nohacefalta", 0)
             elif r.codigo in vencidos:
                 res[r.codigo] = ("vencido", pct)
             elif r.codigo in pronto:
@@ -1600,7 +1651,7 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
         for clave, tipo in (("desarrolla", "producto"), ("proveedores", "herramienta")):
             suyos = [x.nombre for x in activos if x.tipo == tipo]
             if suyos:
-                que = "del producto" if tipo == "producto" else "una herramienta de uso"
+                que = "una IA que ofrecéis a clientes" if tipo == "producto" else "una IA que usa el equipo"
                 res[clave] = ("si", f"Según tu inventario: {', '.join(suyos)} {'es' if len(suyos) == 1 else 'son'} {que}.")
         return res
 
@@ -2062,7 +2113,7 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
     def añadir_sistema(request: Request, nombre: str = Form(""), tipo: str = Form("")):
         nombre = nombre.strip()
         error = ("Falta el nombre." if not nombre else
-                 "Elige si es del producto o una herramienta de uso." if tipo not in db.TIPOS else "")
+                 "Elige qué tipo de IA es: si la ofrecéis a clientes o la usa el equipo." if tipo not in db.TIPOS else "")
         if not error:
             try:
                 nuevo = db.crear_sistema(bd(), espacio()["id"], nombre, tipo, hoy())
@@ -2106,7 +2157,7 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
         tipo = str(form.get("tipo", ""))
         campos = {c: str(form.get(c, "")).strip() for c in db.CAMPOS}
         error = ("Falta el nombre." if not nombre else
-                 "Elige si es del producto o una herramienta de uso." if tipo not in db.TIPOS else "")
+                 "Elige qué tipo de IA es: si la ofrecéis a clientes o la usa el equipo." if tipo not in db.TIPOS else "")
         if not error and nombre.lower() != x.nombre.lower() and any(
                 y.nombre.lower() == nombre.lower() for y in db.sistemas(bd(), espacio()["id"])):
             error = f"Ya hay otro sistema que se llama «{nombre}»."

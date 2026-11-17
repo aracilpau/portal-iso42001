@@ -20,7 +20,7 @@
 </header>
 
 {% if reabiertos %}
-<p class="mensaje" role="status">{% if reabiertos == 'nada' %}No se ha reabierto nada.{% else %}Reabierto: {{ reabiertos }}. Sus puntos vuelven a pendiente.{% endif %}</p>
+<p class="mensaje" role="status">{% if reabiertos == 'nada' %}No hay nada que volver a revisar.{% else %}Para volver a revisar: {{ reabiertos }}. Sus puntos pasan a pendiente hasta que confirmes que siguen valiendo.{% endif %}</p>
 {% endif %}
 
 <section class="empresa-bloque" id="datos-generales">
@@ -39,7 +39,8 @@
 
 <section class="empresa-bloque" id="cuestionario">
     <h2>Cómo es vuestra IA</h2>
-    <p class="ayuda">Deciden qué controles de la <a href="/declaracion">Declaración</a> aplican.</p>
+    <p class="ayuda">Estas {{ preguntas|length }} preguntas deciden qué controles de la <a href="/declaracion">Declaración</a> aplican.
+        La Declaración las necesita contestadas, junto con los datos generales.</p>
     <ol class="cuestionario-preguntas">
         {% for q in preguntas %}
         {% set valor = perfil.respuestas[q.clave] %}

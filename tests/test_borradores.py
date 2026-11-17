@@ -159,7 +159,7 @@ def test_la_generica_se_rellena_con_el_nombre_y_se_hace_word():
 def test_cada_borrador_dice_donde_se_sube_y_que_no_cubre():
     d = borradores.donde("4.1")
     assert d.cubre == ["4.1.a", "4.1.b", "4.1.c", "4.2.a", "4.2.b", "4.2.c"]  # también los de la 4.2: mismo documento
-    assert d.aparte == [("4.1.d", "se cumple solo con 9.3: no hace falta subir nada.")]
+    assert d.aparte == [("4.1.d", "se marca solo cuando completes 9.3; no hace falta subir nada.")]
     politica = borradores.donde("5.2")
     assert politica.firmado == ["5.2.e"] and "A.2.2.b" in politica.cubre
     assert [c for c, _ in politica.aparte] == ["5.2.f"] and "correo" in politica.aparte[0][1]
@@ -185,7 +185,7 @@ def test_el_boton_sale_en_los_que_piden_un_documento_y_no_en_los_demas(cliente):
     con = cliente.get("/requisitos/5.2").text
     assert 'action="/requisitos/5.2/borrador" data-descargar' in con and "Borrador del documento" in con
     generica = cliente.get("/requisitos/7.2").text
-    assert 'action="/requisitos/7.2/borrador"' in generica and "Base para empezar el documento" in generica
+    assert 'action="/requisitos/7.2/borrador"' in generica and "Borrador del documento" in generica
     for codigo in ("7.3", "8.1"):  # solo prácticas o registros; puntos que se cumplen con otros
         assert "/borrador" not in cliente.get(f"/requisitos/{codigo}").text
         assert cliente.post(f"/requisitos/{codigo}/borrador").status_code == 404
@@ -226,9 +226,11 @@ def test_la_4_1_y_la_4_2_usan_la_plantilla_de_contexto_con_el_papel_y_los_sistem
 
 def test_la_ficha_dice_donde_subir_el_borrador(cliente):
     ficha = cliente.get("/requisitos/4.1").text
-    assert "Cuando esté completo, súbelo a:" in ficha and '<a href="/requisitos/4.2#4.2.a">4.2.a</a>' in ficha
-    assert "No cubre:" in ficha and '<a href="/requisitos/4.1#4.1.d">4.1.d</a>' in ficha
-    assert "Firmado, súbelo también a:" in cliente.get("/requisitos/5.2").text
+    # Por letras y con el nombre de cada ficha, sin listas de códigos
+    assert "súbelo en los puntos" in ficha and '<a href="/requisitos/4.2#4.2.a">a</a>' in ficha
+    assert "de esta ficha y en los puntos" in ficha and "de la ficha <a href=\"/requisitos/4.2\">4.2</a> (" in ficha
+    assert "Lo que el borrador no cubre:" in ficha and '<a href="/requisitos/4.1#4.1.d">d</a>' in ficha
+    assert "Cuando esté firmado,</strong> súbelo también en el punto" in cliente.get("/requisitos/5.2").text
 
 
 # --- Recorrido: el aviso de «Empresa» en la ficha y en Inicio (también con las preguntas abiertas) ---

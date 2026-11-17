@@ -6,7 +6,7 @@
 <section class="empresa-bloque" id="bloque-{{ b }}" {% if b == SOLO_SI_DESARROLLA and perfil.respuestas.desarrolla == 'no' %}hidden{% endif %}
          {% if oob %}hx-swap-oob="true"{% endif %}>
     <h2>{{ b }} · {{ titulo }}</h2>
-    {% if b == SOLO_SI_DESARROLLA %}<p class="ayuda">Sale porque no habéis contestado «No» a si desarrolláis IA.</p>{% endif %}
+    {% if b == SOLO_SI_DESARROLLA %}<p class="ayuda">Contesta este bloque si desarrolláis IA. Si no, responde «No» a «¿Desarrolláis IA?» y desaparece.</p>{% endif %}
     <ol class="abiertas">
         {% for q in abiertas if q.bloque == b %}
         <li id="pregunta-{{ q.clave }}">
@@ -26,5 +26,5 @@
 {# Lo que queda por aclarar, arriba de la página #}
 {% macro estado(perfil, hora=None, oob=False) -%}
 <span id="cuestionario-estado" class="guardado-estado" role="status" {% if oob %}hx-swap-oob="true"{% endif %}>
-    {%- if hora %}Guardado a las {{ hora.strftime('%H:%M') }} · {% endif %}{{ perfil.todas_hechas }} de {{ perfil.todas_total }} aclaradas</span>
+    {%- if hora %}Guardado a las {{ hora.strftime('%H:%M') }} · {% endif %}{{ perfil.todas_hechas }} de {{ perfil.todas_total }} preguntas contestadas</span>
 {%- endmacro %}

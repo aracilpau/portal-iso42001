@@ -251,7 +251,24 @@ the portal asks again.
 
 ## Updating to a new version
 
-Your data is not in the program folder, so updating means swapping that folder for the new one:
+To know which version you have, look at the footer of any screen: «Versión del 17/11/2026» (Version of 17/11/2026).
+
+Your data is not in the program folder, so updating means swapping that folder for the new one. `actualizar.bat` does it
+for you:
+
+1. **Make a backup** (see above).
+2. **Double-click `actualizar.bat`**, in the program folder. It checks on GitHub whether there is a newer version than
+   yours:
+   - If there is not, it says «Ya estás al día» (You are up to date) and does nothing else.
+   - If there is, it says what date it is from and asks whether to update: type `s` and press Enter.
+3. **By itself** it shuts down the portal, downloads the new version, swaps the program files and starts the portal
+   again. The first start afterwards takes a couple of minutes, as when installing.
+
+It does not touch your data, your settings or the passwords. The previous version is kept aside, next to
+the portal settings in your Windows user (folder `version-anterior`), and if something fails halfway, it leaves the program as it was. It only
+connects to GitHub to check the version and download it: it sends nothing.
+
+**By hand**, if you prefer (or if that computer has no internet and you bring the ZIP from another one):
 
 1. **Make a backup** (see above).
 2. **Shut down the portal** (close the black window or `parar.bat`).

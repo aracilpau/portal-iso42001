@@ -19,9 +19,13 @@
 {% macro sello(e, hecho, texto_hecho='Cumplido') -%}
 {% if e == VENCE_PRONTO %}<span class="sello s-aviso">Vence pronto</span>
 {% elif e == VENCIDO %}<span class="sello s-mal">Vencido</span>
+{% elif e == NO_HACE_FALTA %}<span class="sello s-gris">No hace falta por ahora</span>
 {% elif hecho %}<span class="sello s-ok">{{ texto_hecho }}</span>
 {% else %}<span class="sello s-gris">Pendiente</span>{% endif %}
 {%- endmacro %}
+
+{# Un requisito por su código y su nombre: «9.3 (Revisión por la dirección)» #}
+{% macro req_nombre(c) -%}<a href="/requisitos/{{ c }}">{{ c }}</a> ({{ titulo_de[c] }}){%- endmacro %}
 
 {# Los archivos de un punto o de una línea, con «Quitar», versiones anteriores y «Subir versión nueva» #}
 {% macro archivos_de(base_url, lista, hist, renueva, que, punto, sistema='') -%}
@@ -68,6 +72,7 @@
 {% set av = est.avance(req.codigo) %}
 {% set aplica = est.aplica(req.codigo) %}
 {% set completo = est.completo(req.codigo) %}
+{% set sobra = aplica and est.no_hace_falta(req.codigo) %}
 <div id="ficha">
 <p class="miga"><a href="/requisitos">Requisitos</a> / {{ req.bloque }} / {{ req.codigo }}</p>
 
@@ -87,10 +92,15 @@
         {% endif %}
         <div class="etqs">
             {% for c in req.como %}<span class="etq">{{ c }}</span>{% endfor %}
-            {% for c in req.cada_cuanto %}<span class="etq etq-cuanto">{{ c }}</span>{% endfor %}
+            {% for c in req.cada_cuanto %}<span class="etq etq-cuanto">{{ CADA_CUANTO[c] }}</span>{% endfor %}
         </div>
     </div>
-    {% if aplica %}
+    {% if sobra %}
+    <div class="ficha-avance">
+        <div class="cifra-num">—</div>
+        <p class="cifra-de">No hace falta por ahora</p>
+    </div>
+    {% elif aplica %}
     <div class="ficha-avance" role="progressbar" aria-valuenow="{{ av.porcentaje }}" aria-valuemin="0" aria-valuemax="100">
         <div class="cifra-num{% if completo %} cifra-ok{% endif %}">{{ av.porcentaje }}<small>%</small></div>
         <p class="cifra-de">{{ av.hechos }} de {{ av.total }} {% if req.puntos %}puntos{% else %}requisitos{% endif %}{% if completo %} · completo{% endif %}</p>
@@ -100,8 +110,15 @@
 
 {% if not aplica %}
 <p class="aviso-noaplica">
-    <strong>No aplica en este espacio.</strong> {{ decision.porque }}
+    <strong>No aplica a vuestra empresa.</strong> {{ decision.porque }}
     No cuenta en el porcentaje y sus puntos no se marcan. <a href="/declaracion#control-{{ req.codigo }}">Cambiarlo en la Declaración</a>
+</p>
+{% endif %}
+{% if sobra %}
+<p class="aviso-noaplica">
+    <strong>No hace falta por ahora.</strong> Solo hay que hacerlo si ofrecéis IA a vuestros clientes, y en
+    <a href="/inventario">«Sistemas de IA»</a> solo tenéis IA que usa el equipo. Si eso cambia, volverá a estar pendiente.
+    Mientras tanto, no cuenta en el porcentaje.
 </p>
 {% endif %}
 
@@ -112,14 +129,21 @@
         {% if req.puntos %}No tiene trabajo propio: todos sus puntos se cumplen al cumplir los requisitos en los que se apoyan.
         {% else %}No tiene trabajo propio: se cumple al cumplir todos los demás requisitos.{% endif %}
     </p>
-    {% elif req.puntos and aplica %}
+    {% elif req.puntos and aplica and not sobra %}
     <p class="reparto">
+        {% set tu, solos, por_ia = reparto[PROPIO], reparto[APOYADO], reparto[SISTEMA] %}
+        {% set total = tu + solos + por_ia %}
+        {% if total == 1 %}
+        {% if tu %}Este punto lo haces tú.{% elif solos %}Este punto se marca solo cuando completes otros requisitos: no tienes que hacer nada aquí.{% else %}Este punto se hace una vez por cada IA de «Sistemas de IA».{% endif %}
+        {% elif total == tu %}Los {{ total }} puntos los haces tú.
+        {% else %}
         {% set partes = [] %}
-        {% if reparto[APOYADO] %}{% set _ = partes.append(reparto[APOYADO] ~ ' se cumple' ~ ('n' if reparto[APOYADO] != 1) ~ ' solo' ~ ('s' if reparto[APOYADO] != 1) ~ ' al completar otros requisitos') %}{% endif %}
-        {% if reparto[SISTEMA] %}{% set _ = partes.append(reparto[SISTEMA] ~ ' se hace' ~ ('n' if reparto[SISTEMA] != 1) ~ ' una vez por cada sistema de IA del inventario') %}{% endif %}
-        {% if partes %}De {{ av.total }} puntos, {{ partes|join(' y ') }}; te queda{{ 'n' if reparto[PROPIO] != 1 }} {{ reparto[PROPIO] }} propio{{ 's' if reparto[PROPIO] != 1 }}.
-        {% else %}Los {{ av.total }} puntos son propios.{% endif %}
-        Marca cada uno al tenerlo; arrastra los archivos encima del punto.
+        {% if tu %}{% set _ = partes.append(tu ~ (' los haces tú' if tu != 1 else ' lo haces tú')) %}{% endif %}
+        {% if solos %}{% set _ = partes.append(solos ~ ' se marca' ~ ('n' if solos != 1) ~ ' solo' ~ ('s' if solos != 1) ~ ' cuando completes otros requisitos') %}{% endif %}
+        {% if por_ia %}{% set _ = partes.append(por_ia ~ ' se hace' ~ ('n' if por_ia != 1) ~ ' una vez por cada IA de «Sistemas de IA»') %}{% endif %}
+        De los {{ total }} puntos: {{ partes[:-1]|join(', ') }} y {{ partes[-1] }}.
+        {% endif %}
+        {% if tu %}Marca cada punto cuando lo tengas. Para guardar la prueba, arrastra el archivo encima del punto.{% endif %}
     </p>
     {% endif %}
 
@@ -149,18 +173,20 @@
                     {{ sello(e, hecho) }}
                     <span class="etq">{{ p.tipo }}</span>
                     {% if p.recomendado %}<span class="etq etq-reco">Recomendado</span>{% endif %}
-                    {% if p.por_sistema %}<span class="etq etq-sistema">Por sistema · {{ p.por_sistema }}</span>{% endif %}
+                    {% if p.por_sistema %}<span class="etq etq-sistema">{{ p.por_sistema }}</span>{% endif %}
                     {% if c in (SISTEMA, FICHA) and est.sistemas_de(p) %}
                     {% set suyos = est.sistemas_de(p) %}
-                    <span class="sub">{{ suyos|length - est.faltan_sistemas(p)|length }} de {{ suyos|length }} sistema{{ 's' if suyos|length != 1 }}</span>
+                    <span class="sub">Hecho en {{ suyos|length - est.faltan_sistemas(p)|length }} de {{ suyos|length }} IA</span>
                     {% endif %}
                 </div>
 
                 {% if p.te_pediran %}<p class="punto-pediran"><b>Te pedirán:</b> {{ p.te_pediran }}</p>{% endif %}
 
                 {% if p.apoyos %}
-                <p class="punto-apoyo">Se apoya en {% for a in p.apoyos %}<a href="/requisitos/{{ a }}">{{ a }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
-                    {% if c == APOYADO and not hecho %}Se marcará solo cuando esté{{ 'n' if est.faltan(p)|length != 1 }} completo{{ 's' if est.faltan(p)|length != 1 }}: {{ est.faltan(p)|join(', ') }}.{% endif %}
+                <p class="punto-apoyo">
+                    {% if c == APOYADO %}Se marca solo cuando completes {% for a in p.apoyos %}{{ req_nombre(a) }}{% if not loop.last %}{{ ' y ' if loop.revindex == 2 else ', ' }}{% endif %}{% endfor %}.
+                    {% if hecho %}Ya está{{ 'n' if p.apoyos|length != 1 }} completo{{ 's' if p.apoyos|length != 1 }}.{% elif est.faltan(p)|length < p.apoyos|length %}Falta{{ 'n' if est.faltan(p)|length != 1 }}: {{ est.faltan(p)|join(', ') }}.{% endif %}
+                    {% else %}Relacionado con {% for a in p.apoyos %}{{ req_nombre(a) }}{% if not loop.last %}{{ ' y ' if loop.revindex == 2 else ', ' }}{% endif %}{% endfor %}.{% endif %}
                 </p>
                 {% endif %}
                 {% if c == PROPIO and clase(p) == APOYADO %}
@@ -198,9 +224,10 @@
                 {% set suyos = est.sistemas_de(p) %}
                 {% set cl = est.clase_linea(p) %}
                 {% if not est.sistemas %}
-                <p class="punto-espera">Añade tus sistemas al <a href="/inventario">inventario</a>: este punto se lleva sistema por sistema.</p>
+                <p class="punto-espera">Apunta vuestras IA en <a href="/inventario">«Empresa → Sistemas de IA»</a>: este punto se hace una vez por cada una.</p>
                 {% elif not suyos %}
-                <p class="punto-espera">No hay IA del producto en el <a href="/inventario">inventario</a>: este punto no hace falta por ahora.</p>
+                <p class="punto-espera">No hace falta por ahora: solo es para la IA que ofrecéis a vuestros clientes, y en
+                    <a href="/inventario">«Sistemas de IA»</a> no hay ninguna. Si añadís una, este punto volverá a estar pendiente.</p>
                 {% else %}
                 <ol class="lineas">
                     {% for x in suyos %}
@@ -231,8 +258,8 @@
                             {% endif %}
                         </div>
                         {% if cl == APOYADO %}
-                        <p class="punto-espera">{% if ex == 'pendiente' %}Se marcará solo cuando, para este sistema, esté{{ 'n' if est.faltan_en(p, x)|length != 1 }} completo{{ 's' if est.faltan_en(p, x)|length != 1 }}: {{ est.faltan_en(p, x)|join(', ') }}.
-                            {% else %}Se cumple solo con lo de este sistema en {{ p.apoyos|join(', ') }}.{% endif %}</p>
+                        <p class="punto-espera">{% if ex == 'pendiente' %}Se marca solo cuando, para esta IA, completes {% for a in est.faltan_en(p, x) %}{{ req_nombre(a) }}{% if not loop.last %}{{ ' y ' if loop.revindex == 2 else ', ' }}{% endif %}{% endfor %}.
+                            {% else %}Hecho con lo de esta IA en {{ p.apoyos|join(', ') }}.{% endif %}</p>
                         {% endif %}
                         {% if a_mano_x %}
                         {% if movido and movido.startswith(p.codigo ~ ' - ' ~ (x.nombre|seguro) ~ ' - ') %}
@@ -263,9 +290,9 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <p class="punto-espera">Se cumple solo con el campo <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> de la ficha de cada sistema del <a href="/inventario">inventario</a>: hace falta en todos los activos.</p>
+                <p class="punto-espera">Se marca solo cuando rellenes el apartado <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> en la ficha de cada IA de <a href="/inventario">«Empresa → Sistemas de IA»</a> (las que no hayáis retirado).</p>
                 {% else %}
-                <p class="punto-espera">Añade tus sistemas al <a href="/inventario">inventario</a>: este punto se cumple solo con el campo <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> de la ficha de cada uno.</p>
+                <p class="punto-espera">Apunta vuestras IA en <a href="/inventario">«Empresa → Sistemas de IA»</a>: este punto se marca solo cuando rellenes el apartado <strong>«{{ CAMPO_TITULO[p.codigo] }}»</strong> en la ficha de cada una.</p>
                 {% endif %}
                 {% endif %}
             </div>
@@ -277,7 +304,8 @@
     <section class="seccion historial" id="historial">
         <div class="seccion-titulo"><h2>Versiones anteriores</h2><small>{{ historial|length }}</small></div>
         {% if borrado %}<p class="mensaje" role="status">«{{ borrado }}» se ha borrado para siempre.</p>{% endif %}
-        <p class="ayuda">Lo que se quitó o se sustituyó al renovar, con el punto y el día delante. No se borra solo.</p>
+        <p class="ayuda">Los archivos que has quitado o cambiado por uno más nuevo. Se guardan aquí por si el auditor pide la versión
+            antigua; solo se borran si tú los borras. Su nombre empieza por el punto y el día en que se guardaron.</p>
         {% if historial %}
         <ul class="archivos archivos-historial">
             {% for a in historial %}
@@ -319,7 +347,7 @@
     {% if con_borrador %}
     <section class="caja" id="borrador">
         {% if borrador_generico %}
-        <h2>Base para empezar el documento</h2>
+        <h2>Borrador del documento</h2>
         <p>Un Word para empezar a escribir: un apartado por cada punto que se demuestra con un documento, con lo que tiene
             que decir y lo que pedirá el auditor. Lo vuestro va en cada [POR COMPLETAR].</p>
         {% else %}
@@ -342,11 +370,12 @@
     {% endif %}
 
     <section class="caja" id="nota">
-        <h2>Cómo lo hacemos aquí</h2>
+        <h2>Vuestras notas</h2>
         <form class="nota-form" method="post" action="/requisitos/{{ req.codigo }}/nota"
               hx-post="/requisitos/{{ req.codigo }}/nota" hx-trigger="input changed delay:1s, change"
               hx-target="#nota-estado" hx-swap="outerHTML">
-            <label class="ayuda" for="nota-texto">Quién se encarga, dónde está cada cosa, cómo lo resolvéis.</label>
+            <label class="ayuda" for="nota-texto">Apunta lo que os sirva para la próxima vez: quién se encarga, dónde guardáis los
+                documentos, cómo lo hacéis. Las ven todas las cuentas de esta empresa, y los borradores y el chat las usan.</label>
             <textarea id="nota-texto" name="texto" rows="5">{{ nota }}</textarea>
             <noscript><button class="boton boton-mini" type="submit">Guardar nota</button></noscript>
             <span id="nota-estado" class="guardado-estado" role="status">{% if nota_guardada %}Nota guardada.{% else %}Se guarda sola mientras escribes.{% endif %}</span>
@@ -356,11 +385,12 @@
     {% if aplica and se_reabre(req) and est.algo_marcado(req) %}
     <section class="caja">
         <h2>¿Ha cambiado algo?</h2>
-        <p>Si ha pasado algo que le afecte, sus puntos vuelven a pendiente hasta que los revises.</p>
+        <p>Si ha pasado algo que afecte a este requisito (una ley nueva, otra IA, un cambio en la empresa…), pulsa «Volver a
+            revisar». Sus puntos pasarán a pendiente hasta que confirmes que siguen valiendo; los archivos no se borran.</p>
         <p class="caja-pie">
             <button class="boton boton-mini" type="button" data-confirmar="/requisitos/{{ req.codigo }}/reabrir"
                     data-titulo="¿Ha cambiado algo que afecte a {{ req.codigo }}?" data-nombre="{{ req.titulo }}"
-                    data-ayuda="Sus puntos vuelven a pendiente hasta que los revises." data-accion="Reabrir">Reabrir {{ req.codigo }}</button>
+                    data-ayuda="Sus puntos pasan a pendiente hasta que confirmes que siguen valiendo. Los archivos no se borran." data-accion="Volver a revisar">Volver a revisar {{ req.codigo }}</button>
         </p>
     </section>
     {% endif %}

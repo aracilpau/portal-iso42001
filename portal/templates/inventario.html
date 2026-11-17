@@ -8,8 +8,9 @@
     <div>
         <p class="antetitulo">Empresa · A.4 Recursos de los sistemas de IA</p>
         <h1 class="titular">Sistemas de IA</h1>
-        <p class="bajada">La IA del producto y las herramientas de IA que usa la plantilla. La ficha de cada uno cumple sola
-            los puntos A.4.2.a a A.4.6.a para ese sistema.</p>
+        <p class="bajada">Apunta aquí cada IA que hay en la empresa: la que ofrecéis a vuestros clientes y las herramientas que
+            usa el equipo (ChatGPT, Copilot…). Rellenar la ficha de cada una cubre lo que pide la norma sobre vuestros recursos de
+            IA (para qué es, datos, herramientas, dónde funciona y personas): no hace falta subir nada más para eso.</p>
     </div>
     <nav class="filtros" aria-label="Partes de Empresa">
         <a href="/empresa" {% if seccion == 'empresa' %}class="on" aria-current="page"{% endif %}>Cuestionario</a>
@@ -18,11 +19,11 @@
 </header>
 
 <form class="alta" method="post" action="/inventario">
-    <label class="alta-titulo" for="nombre-nuevo">Añadir un sistema</label>
+    <label class="alta-titulo" for="nombre-nuevo">Añadir una IA</label>
     <input id="nombre-nuevo" name="nombre" type="text" placeholder="Ej.: Asistente de la web, ChatGPT…"
            value="{{ borrador.nombre if borrador else '' }}">
-    <select name="tipo" aria-label="Tipo de sistema">
-        <option value="" {% if not borrador or not borrador.tipo %}selected{% endif %} disabled>¿Del producto o herramienta?</option>
+    <select name="tipo" aria-label="¿Qué tipo de IA es?">
+        <option value="" {% if not borrador or not borrador.tipo %}selected{% endif %} disabled>¿Qué tipo de IA es?</option>
         {% for clave, texto in TIPOS.items() %}
         <option value="{{ clave }}" {% if borrador and borrador.tipo == clave %}selected{% endif %}>{{ texto }}</option>
         {% endfor %}
@@ -42,21 +43,21 @@
             <p class="antetitulo">{{ TIPOS[x.tipo] }}</p>
             <a class="sistema-nombre" href="/inventario/{{ x.id }}">{{ x.nombre }}</a>
             <div class="mini"><div class="mini-barra{% if lleno %} ok{% endif %}"><span style="width: {{ (100 * x.completos / total_campos)|round|int }}%"></span></div>
-                <b>{{ x.completos }}/{{ total_campos }}</b></div>
-            <p class="sub">{% if lleno %}Ficha completa{% else %}Faltan {{ total_campos - x.completos }} campo{{ 's' if total_campos - x.completos != 1 }} de su ficha{% endif %}</p>
+                </div>
+            <p class="sub">{% if lleno %}Ficha completa{% else %}{{ x.completos }} de {{ total_campos }} apartados rellenos{% endif %}</p>
             <div class="sistema-pie">
                 <a class="boton boton-mini" href="/inventario/{{ x.id }}">Abrir ficha</a>
                 <button class="enlace enlace-peligro" type="button"
                         data-confirmar="/inventario/{{ x.id }}/retirar"
-                        data-titulo="¿Retirar este sistema?" data-nombre="{{ x.nombre }}"
-                        data-ayuda="Deja de contar. Su ficha se guarda y sus archivos pasan a las versiones anteriores de cada requisito. Se puede volver a activar."
+                        data-titulo="¿Retirar esta IA?" data-nombre="{{ x.nombre }}"
+                        data-ayuda="Úsalo cuando ya no la uséis. Deja de contar en lo que pide la norma; su ficha se guarda y sus archivos pasan a las versiones anteriores de cada requisito. Puedes volver a activarla."
                         data-accion="Retirar">Retirar</button>
             </div>
         </li>
         {% endfor %}
     </ol>
     {% else %}
-    <p class="vacio">Aún no hay sistemas. Mientras el inventario esté vacío, A.4.2.a a A.4.6.a quedan pendientes.</p>
+    <p class="vacio">Aún no hay ninguna IA apuntada. Añade la primera (por ejemplo, ChatGPT si lo usa el equipo).</p>
     {% endif %}
 </section>
 

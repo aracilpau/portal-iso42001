@@ -90,7 +90,9 @@ El portal tiene un solo estilo, **Plano**, con modo claro y oscuro: el menú arr
 
 - **El avance:** dos porcentajes, «Obligatorios» (las cláusulas 4 a 10, que se cumplen siempre) y «Controles del
   Anexo A» (solo los que aplican). Un requisito cuenta cuando está completo. Los controles sin decidir cuentan como si
-  aplicaran; los que no aplican no cuentan. Los puntos recomendados no cuentan en el porcentaje.
+  aplicaran; los que no aplican no cuentan. Los puntos recomendados no cuentan en el porcentaje. Los controles que
+  solo son para la IA que ofrecéis a clientes, si no tenéis ninguna, «no hacen falta por ahora» y tampoco cuentan
+  (lo dice debajo). El saludo solo dice «Todo al día» si además lo obligatorio está completo.
 - **Lo pendiente:** la lista «Lo siguiente», ordenada por urgencia (vencidos, vencen pronto, recordatorios, sistemas
   nuevos, la pregunta «¿Ha pasado algo?»), cada uno con su botón: «Ir a renovar», «Hecho», «Decidir», «No, nada»
   (ver **avisos**). Además, un mapa con un cuadro por requisito, coloreado por su estado (al pasar el ratón dice cuál
@@ -139,10 +141,11 @@ vencimientos, mediciones y auditoría), oportunidades de mejora y conclusiones y
   evento» no vencen por fecha: dicen «No vence por fecha».
 - **Renovar:** el botón «Renovar» del punto dice que sigue valiendo y vuelve a contar desde hoy. Se destaca cuando
   vence pronto o ha vencido.
-- **La nota «Cómo lo hacemos aquí»:** lo propio de la empresa (quién se encarga, dónde está cada cosa). Se guarda sola
-  mientras se escribe. Está en la columna de la derecha.
+- **«Vuestras notas»:** lo propio de la empresa (quién se encarga, dónde guardáis cada cosa, cómo lo hacéis). Se guarda
+  sola mientras se escribe y la ven todas las cuentas de la empresa. Está en la columna de la derecha.
 - **«¿Ha cambiado algo?»:** en los requisitos que se reabren por evento y tienen algo marcado. Pide confirmación y
-  devuelve sus puntos a pendiente. Es una caja a la derecha, con el botón «Reabrir».
+  devuelve sus puntos a pendiente hasta que se confirme que siguen valiendo (los archivos no se borran). Es una caja a
+  la derecha, con el botón «Volver a revisar».
 - **Controles del Anexo A:** la ficha dice si aplica a tu empresa y enlaza a la Declaración. Si no aplica, no se marca
   nada y no se ven sus archivos.
 - **«Lo último»:** a la derecha, lo más reciente que se ha hecho en ese requisito.
@@ -194,11 +197,11 @@ minuto.
 - **Base para empezar:** los otros 28 requisitos que piden un documento propio (por ejemplo la 7.4 o muchos controles
   del Anexo A) tienen una plantilla genérica: un apartado por cada punto que se demuestra con un documento, con lo que
   tiene que decir y lo que pedirá el auditor, todo como [POR COMPLETAR], y al final lo que no va en el documento. Solo
-  lleva de la empresa el nombre, la fecha y quién aprueba. En la ficha sale como «Base para empezar el documento».
+  lleva de la empresa el nombre, la fecha y quién aprueba.
 - No hay botón en los requisitos que solo se demuestran con registros o con la práctica (por ejemplo la 7.3), ni en
   los que se cumplen con otros (la 8.1).
 - **Con IA:** Claude redacta el documento en formal con todo lo de «Empresa» (también las preguntas abiertas y las de
-  la IA ya contestadas), el inventario con la ficha de cada sistema y las notas «Cómo lo hacemos aquí». **No lee los
+  la IA ya contestadas), el inventario con la ficha de cada sistema y «Vuestras notas». **No lee los
   archivos subidos.** Arriba lleva «Borrador hecho con IA. Revísalo y apruébalo antes de usarlo».
 - **Estructura fija:** los títulos y apartados son siempre los de la plantilla (o los de la base genérica), en el mismo
   orden; la IA solo escribe dentro. Si no ha cambiado nada de lo que se le da, sale el mismo borrador que la vez
@@ -228,24 +231,29 @@ minuto.
 
 - **Puntos por sistema:** algunos puntos se cumplen una vez por cada sistema de IA del inventario (por ejemplo, la
   evaluación de impacto). Tienen una línea por sistema, cada una con su casilla, sus archivos y su vencimiento. El
-  punto está cumplido cuando lo está en todos los sistemas activos a los que les toca. Algunos son «Solo IA del
-  producto» y no piden nada a las herramientas de uso.
+  punto está cumplido cuando lo está en todos los sistemas activos a los que les toca. Algunos son «Solo la IA que
+  ofrecéis a clientes» y no piden nada a la IA que usa el equipo. Si no tenéis ninguna IA que ofrezcáis a clientes,
+  esos puntos «no hacen falta por ahora»: no cuentan ni como hechos ni como pendientes, y si todos los puntos de un
+  requisito son así, el requisito tampoco cuenta en el porcentaje. Al añadir una, vuelven a estar pendientes.
 - **Puntos que se cumplen solos («apoyados»):** se apoyan en otros requisitos y se marcan solos cuando esos están
-  completos. No tienen casilla; dicen «Se marcará solo cuando esté completo: …».
+  completos. No tienen casilla; dicen «Se marca solo cuando completes …», con el nombre del requisito.
 - **Puntos de la ficha del sistema:** A.4.2.a a A.4.6.a se cumplen solos al rellenar el campo correspondiente de la
   ficha de cada sistema en el inventario.
 - Sin sistemas en el inventario, los puntos por sistema quedan pendientes.
 
 ## inventario
 
-**Qué es:** los sistemas de IA de la empresa: la IA del producto y las herramientas de IA que usa la plantilla.
+**Qué es:** cada IA que hay en la empresa: la que ofrecéis a vuestros clientes y las herramientas que usa el equipo
+(ChatGPT, Copilot…).
 
-- **Dar de alta:** escribir el nombre, elegir «Del producto» o «Herramienta de uso» y «Añadir». Se abre su ficha.
+- **Dar de alta:** escribir el nombre, elegir qué tipo de IA es («La ofrecemos a clientes» o «La usa el equipo») y
+  «Añadir». Se abre su ficha.
   - Al dar de alta (o volver a activar) un sistema, la ficha pregunta si se reabren los riesgos (8.2, 8.3) y los
     proveedores (A.10.3), que son de toda la empresa. Se puede reabrir lo marcado o contestar «No hace falta». Si no
     se contesta, la pregunta queda pendiente en los avisos.
 - **La ficha de cada sistema:** cinco campos (para qué sirve, datos, herramientas, infraestructura, personas), cada uno
-  con su ayuda. Se guarda sola al salir de cada campo. Cada campo lleno cumple uno de los puntos A.4.2.a a A.4.6.a.
+  con su ayuda. Se guarda sola al salir de cada campo. Cada apartado relleno cuenta para su requisito (A.4.2 a A.4.6):
+  no hace falta subir nada más para eso.
 - **Retirar:** el sistema deja de contar; su ficha se guarda y sus archivos pasan a versiones anteriores. Se puede
   **volver a activar** desde la lista de retirados.
 
@@ -260,7 +268,7 @@ por qué. El auditor pregunta por los dos casos.
   el nuevo; ese porqué queda como motivo del cambio en «Cambios».
 - **Pestañas:** «Controles» (decidir), «Cambios» (cada decisión y cambio con fecha y motivo) y «Documento» (vista
   previa; se descarga en Word o PDF, o se guarda como prueba en la 6.1.3.c).
-- Mientras un control está sin decidir, cuenta en el porcentaje como si aplicara.
+- Mientras un control está sin decidir, cuenta como pendiente en el avance.
 - **Desmarcar:** volver a pulsar la opción marcada («Aplica» o «No aplica») la desmarca y el control vuelve a «Sin
   decidir». Queda en «Cambios» («Se deja sin decidir») y en «Actividad»; el porqué escrito se queda en el cuadro.
 - Al decidir que un control no aplica, su carpeta de pruebas pasa a llamarse «… (no aplica)».
@@ -276,8 +284,8 @@ por qué. El auditor pregunta por los dos casos.
 - **Preguntas abiertas,** en 5 bloques (la empresa y la IA; personas; clientes, leyes y proveedores; cómo trabajáis;
   si desarrolláis IA). Se contestan en llano, como a un compañero; cada una tiene un ejemplo. El bloque 5 solo sale si
   no se ha contestado «No» a si desarrolláis IA. Las leyes no se preguntan.
-- Cada respuesta se guarda sola al cambiarla (las abiertas, al salir del cuadro). Arriba dice cuántas están aclaradas:
-  «No lo sé» cuenta como por aclarar, igual que una en blanco.
+- Cada respuesta se guarda sola al cambiarla (las abiertas, al salir del cuadro). Arriba dice cuántas preguntas están
+  contestadas: «No lo sé» cuenta como sin contestar, igual que una en blanco.
 - **Al cambiar una respuesta que ya tenía algo,** debajo sale la lista de requisitos que dependen de ella, como en «Ha
   pasado algo», para reabrir los que hagan falta. Al contestar por primera vez no sale. Los datos generales no reabren
   nada. Cambiar una respuesta no toca lo ya decidido en la Declaración.
@@ -290,7 +298,7 @@ por qué. El auditor pregunta por los dos casos.
 
 ## propuestas
 
-**Qué es:** el botón «Proponer», debajo del cuestionario. Propone, para cada control, APLICA, NO APLICA o FALTA SABER,
+**Qué es:** el botón «Proponer qué controles aplican», debajo del cuestionario. Propone, para cada control, APLICA, NO APLICA o FALTA SABER,
 con el porqué. Tarda alrededor de medio minuto.
 
 - **Quién decide cada uno (Declaración mixta):**
@@ -320,8 +328,8 @@ con el porqué. Tarda alrededor de medio minuto.
 
 - Se elige la situación: persona nueva o cambio de puesto, proveedor de IA nuevo, incidente o queja, cambio en la
   empresa o en la gestión, o cambio de fuera (leyes, clientes, tecnología).
-- Sale la lista de requisitos que tocan, con una casilla en los que tienen algo que reabrir. «Reabrir los marcados»
-  devuelve sus puntos a pendiente. Queda apuntado en Actividad, aunque no se reabra nada.
+- Sale la lista de requisitos que tocan, con una casilla en los que tienen algo que volver a revisar. «Volver a revisar
+  los marcados» devuelve sus puntos a pendiente hasta que se confirme que siguen valiendo; no se borra nada. Queda apuntado en Actividad, aunque no se reabra nada.
 - Cada cierto tiempo (por defecto 4 meses) el portal pregunta «¿Ha pasado algo?» en los avisos. Se cambia en Ajustes.
 - Un sistema de IA nuevo no va aquí: lo pregunta el inventario al darlo de alta.
 

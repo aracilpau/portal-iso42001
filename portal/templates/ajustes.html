@@ -31,7 +31,7 @@
         {% if correo.ok %}<p class="mensaje" role="status">{{ correo.ok }}</p>{% endif %}
         {% if correo.error %}<p class="mensaje mensaje-error" role="alert">{{ correo.error }}</p>{% endif %}
         <form class="ajuste-form correo-form" method="post" action="/ajustes/correo">
-            <label><input type="checkbox" name="activado" value="1" {% if correo.activado %}checked{% endif %}> Mandarlos por correo y con notificación</label>
+            <label><input type="checkbox" name="activado" value="1" {% if correo.activado %}checked{% endif %}> Mandar avisos por correo y con un aviso en la pantalla de Windows</label>
             {% if correo.usuarios %}
             <fieldset class="correo-usuarios">
                 <legend class="etiqueta-campo">Los usuarios de esta empresa</legend>
@@ -53,8 +53,8 @@
         {% if correo.activado and not correo.programada %}
         <p class="mensaje mensaje-aviso">Falta programarlos en Windows: doble clic a <code>programar-avisos.bat</code>.</p>
         {% endif %}
-        <p class="caja-pie sub">El día 1, el resumen del mes; cada lunes, lo vencido y lo que vence esa semana. A las 9:00 o al
-            encender. Desde el Outlook clásico de este ordenador.{% if correo.mes %} Último resumen: {{ correo.mes[5:7] }}/{{ correo.mes[:4] }}.{% endif %}{% if correo.semana %} Último lunes: {{ correo.semana[8:10] }}/{{ correo.semana[5:7] }}.{% endif %}</p>
+        <p class="caja-pie sub">El día 1, el resumen del mes; cada lunes, lo vencido y lo que vence esa semana. Se envían a las
+            9:00, o al encender el ordenador si estaba apagado, desde el Outlook (la versión clásica) de este ordenador.{% if correo.mes %} Último resumen: {{ correo.mes[5:7] }}/{{ correo.mes[:4] }}.{% endif %}{% if correo.semana %} Último lunes: {{ correo.semana[8:10] }}/{{ correo.semana[5:7] }}.{% endif %}</p>
     </section>
 
     <section class="caja" id="preguntar">
@@ -117,7 +117,7 @@
               hx-post="/ajustes/antelacion" hx-trigger="change" hx-target="#ajustes" hx-select="#ajustes" hx-swap="outerHTML">
             <label for="dias">Un punto pasa a «Vence pronto»</label>
             <input id="dias" name="dias" type="number" min="0" max="365" value="{{ est.antelacion }}" class="numero">
-            <span>días antes de vencer. Sigue contando en el porcentaje hasta que vence.</span>
+            <span>días antes de vencer. Mientras no venza, sigue contando como hecho.</span>
             <noscript><button class="boton boton-mini" type="submit">Guardar</button></noscript>
         </form>
     </section>
@@ -148,11 +148,12 @@
 
     <section class="seccion" id="plazos">
         <div class="seccion-titulo"><h2>Cada requisito: si vence y sus recordatorios</h2></div>
-        <p class="ayuda">En cada requisito solo se elige si vence con la revisión general o no vence por fecha (los «por
-            evento», que se reabren cuando pasa algo). Al cambiarlo se recalculan los puntos ya cumplidos.</p>
+        <p class="ayuda">Para cada requisito, elige si se revisa cada año con todo lo demás o solo cuando pasa algo («¿Ha
+            pasado algo?»). Si lo cambias, las fechas de vencimiento de lo ya hecho se ajustan solas.</p>
         <p class="ayuda">Los recordatorios son para ir haciendo cosas durante el año. Vienen puestos los recomendados,
             solo donde hace falta continuidad (objetivos, medición, mejora, formación, riesgos, inventario…). Son una recomendación
-            del portal: la norma no fija frecuencias. Si una opción no dice «(recomendado)», es que la has cambiado.</p>
+            del portal: la norma no fija frecuencias. La opción recomendada lleva «(recomendado)»; si la elegida es otra, es que
+            se cambió.</p>
         <ol class="ajustes-lista">
             {% for r in requisitos if r.puntos %}
             {% set actual = est.plazo(r) %}

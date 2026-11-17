@@ -181,12 +181,12 @@ def test_las_preguntas_de_la_ia_salen_en_empresa_y_contestadas_llegan_al_siguien
     html = cliente.get("/empresa").text
     assert "¿Quién aprueba la política?" in html and "del borrador «politica-ia»" in html
     antes = cliente.get("/empresa").text
-    pendientes_antes = int(antes.split(" aclaradas")[0].split(" de ")[-1])
+    pendientes_antes = int(antes.split(" preguntas contestadas")[0].split(" de ")[-1])
     fila = db.preguntas_ia(bd, 1)[0]
     r = cliente.post(f"/empresa/pregunta-ia/{fila['id']}", data={"valor": "El consejo de administración."}, headers=HX)
     assert "Guardado a las" in r.text
     assert f">El consejo de administración.</textarea>" in cliente.get("/empresa").text
-    assert int(cliente.get("/empresa").text.split(" aclaradas")[0].split(" de ")[-1]) == pendientes_antes
+    assert int(cliente.get("/empresa").text.split(" preguntas contestadas")[0].split(" de ")[-1]) == pendientes_antes
     # Otro borrador ya la usa, y a ese le pregunta otra cosa: no se repiten ni se pierden las contestadas
     claude.preguntas = ["¿Quién aprueba la política?", "¿Tenéis comité?"]
     cliente.post("/requisitos/4.3/borrador")

@@ -110,7 +110,7 @@ def test_cambiar_un_control_apunta_el_porque_nuevo_como_motivo(cliente):
 def test_un_control_que_no_aplica_se_ve_pero_no_se_marca(cliente):
     decidir(cliente, "A.10.3", "no", "No usamos IA de terceros")
     ficha = cliente.get("/requisitos/A.10.3").text
-    assert "No aplica en este espacio." in ficha and "No usamos IA de terceros" in ficha
+    assert "No aplica a vuestra empresa." in ficha and "No usamos IA de terceros" in ficha
     assert "Marcar como cumplido" not in ficha
     assert cliente.post("/requisitos/A.10.3/puntos/A.10.3.a/marcar").status_code == 400
     assert "No aplica</span>" in cliente.get("/requisitos").text

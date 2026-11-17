@@ -10,22 +10,22 @@
             {% if lista %}
             <input type="checkbox" id="req-{{ r.codigo }}" name="requisitos" value="{{ r.codigo }}" checked>
             {% else %}
-            <input type="checkbox" disabled aria-label="Nada que reabrir">
+            <input type="checkbox" disabled aria-label="Nada que volver a revisar">
             {% endif %}
             <a class="reabrir-cod" href="/requisitos/{{ r.codigo }}" data-info="{{ r.resumen }}">{{ r.codigo }}</a>
             <label class="reabrir-titulo" {% if lista %}for="req-{{ r.codigo }}"{% endif %} data-info="{{ r.resumen }}">{{ r.titulo }}</label>
             <span class="sub">
                 {% set codigos = lista|map(attribute=0)|map(attribute='codigo')|unique|list %}
-                {% if lista %}Se reabre{{ 'n' if codigos|length > 1 }} {{ codigos|join(', ') }}
-                {% elif est.con_ficha(r) %}Se pone al día en la ficha de cada sistema del <a href="/inventario">inventario</a>
-                {% else %}Nada que reabrir: ya está pendiente{% endif %}
+                {% if lista %}Vuelve{{ 'n' if codigos|length > 1 }} a pendiente: {{ codigos|join(', ') }}
+                {% elif est.con_ficha(r) %}No se reabre: revisa lo que toque en la ficha de cada IA de <a href="/inventario">«Empresa → Sistemas de IA»</a>
+                {% else %}Nada que volver a revisar: ya está pendiente{% endif %}
             </span>
         </li>
         {% endfor %}
     </ol>
     <div class="reabrir-pie">
-        <button class="boton boton-acento" type="submit">Reabrir los marcados</button>
-        <span class="ayuda">Sus puntos vuelven a pendiente hasta que los revises.</span>
+        <button class="boton boton-acento" type="submit">Volver a revisar los marcados</button>
+        <span class="ayuda">Sus puntos pasan a pendiente hasta que confirmes que siguen valiendo. No se borra nada.</span>
     </div>
 </form>
 {%- endmacro %}

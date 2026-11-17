@@ -84,7 +84,9 @@ def test_el_menu_tiene_los_sitios_y_marca_donde_estas(cliente):
 
 def test_inicio_sin_nada_pendiente(cliente):
     html = cliente.get("/").text
-    assert "Todo <em>al día</em>" in html and "Nada pendiente por ahora" in html
+    # Sin nada vencido, pero con lo obligatorio por hacer, no dice «Todo al día»
+    assert "Nada vencido <em>ni por vencer</em>" in html and "Nada pendiente por ahora" in html
+    assert "Aún te quedan 27 requisitos obligatorios por completar." in html and "Todo <em>al día</em>" not in html
 
 
 def test_lo_siguiente_ordena_vencidos_vencen_y_recordatorios(cliente, reloj):
@@ -141,7 +143,7 @@ def test_la_lista_filtra_por_estado_y_cuenta_cada_filtro(cliente, reloj):
     todos = cliente.get("/requisitos").text
     assert len(filas(todos)) == 65
     assert re.search(r'aria-current="page">Todos<b>65</b>', todos)
-    assert ">Pendientes<b>63</b>" in todos and ">Completos<b>1</b>" in todos and ">No aplican<b>1</b>" in todos
+    assert ">Pendientes<b>63</b>" in todos and ">Completos<b>1</b>" in todos and ">No aplican o no hacen falta<b>1</b>" in todos
     assert filas(cliente.get("/requisitos?ver=completos").text) == ["4.3"]
     assert filas(cliente.get("/requisitos?ver=noaplica").text) == ["A.10.4"]
     pendientes = filas(cliente.get("/requisitos?ver=pendientes").text)
@@ -200,13 +202,13 @@ def test_la_ficha_de_un_punto_por_sistema_tiene_una_linea_por_sistema(cliente):
     assert 'id="8.4.a-1"' in ficha and 'data-soltar="/requisitos/8.4/puntos/8.4.a/sistemas/1/archivos"' in ficha
     assert 'hx-post="/requisitos/8.4/puntos/8.4.a/sistemas/1/marcar"' in ficha
     r = cliente.post("/requisitos/8.4/puntos/8.4.a/sistemas/1/marcar", headers=HX)
-    assert "1 de 1 sistema" in r.text
+    assert "Hecho en 1 de 1 IA" in r.text
 
 
 def test_la_ficha_de_un_control_que_no_aplica(cliente):
     cliente.post("/declaracion/A.10.4", data={"aplica": "no", "porque": "Sin clientes con IA."})
     ficha = cliente.get("/requisitos/A.10.4").text
-    assert "No aplica en este espacio." in ficha and "Sin clientes con IA." in ficha
+    assert "No aplica a vuestra empresa." in ficha and "Sin clientes con IA." in ficha
     assert "/marcar" not in ficha and 'data-soltar="' not in ficha  # ni casillas ni subir
 
 
@@ -220,9 +222,9 @@ def test_dar_de_alta_un_sistema_y_rellenar_su_ficha_sola(cliente):
     assert 'hx-post="/inventario/1"' in r.text and 'id="estado-para_que"' in r.text
     r = cliente.post("/inventario/1", data={"nombre": "ChatGPT", "tipo": "herramienta", "para_que": "Redactar correos.",
                                             "auto": "1"}, headers=HX)
-    assert 'id="estado-para_que" hx-swap-oob="true" class="sello s-ok">Hecho' in r.text
+    assert 'id="estado-para_que" hx-swap-oob="true" class="sello s-ok">Relleno' in r.text
     lista = cliente.get("/inventario").text
-    assert 'class="sistema-nombre" href="/inventario/1">ChatGPT</a>' in lista and "<b>1/5</b>" in lista
+    assert 'class="sistema-nombre" href="/inventario/1">ChatGPT</a>' in lista and "1 de 5 apartados rellenos" in lista
     assert 'data-confirmar="/inventario/1/retirar"' in lista
 
 

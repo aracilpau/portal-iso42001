@@ -4,7 +4,8 @@
 
 {% block contenido %}
 {% set NOMBRES = {'hecho': ('Completo', 's-ok'), 'curso': ('En curso', 's-acento'), 'pendiente': ('Sin empezar', 's-gris'),
-                  'vencido': ('Algo vencido', 's-mal'), 'pronto': ('Vence pronto', 's-aviso'), 'noaplica': ('No aplica', 's-gris')} %}
+                  'vencido': ('Algo vencido', 's-mal'), 'pronto': ('Vence pronto', 's-aviso'), 'noaplica': ('No aplica', 's-gris'),
+                  'nohacefalta': ('No hace falta por ahora', 's-gris')} %}
 {% set dentro = filtros[ver][1] %}
 <header class="cabeza">
     <div>
@@ -19,6 +20,14 @@
     </nav>
 </header>
 
+<details class="leyenda-columnas">
+    <summary>¿Qué quieren decir «Cómo se demuestra» y «Cada cuánto»?</summary>
+    <dl>
+        {% for c, texto in COMO_SE_DEMUESTRA.items() %}<dt>{{ c }}</dt><dd>{{ texto }}</dd>{% endfor %}
+        {% for c, texto in CADA_CUANTO.items() %}<dt>{{ texto }}</dt><dd>{{ CADA_CUANTO_AYUDA[c] }}</dd>{% endfor %}
+    </dl>
+</details>
+
 {% set ns = namespace(alguno=false) %}
 <table class="tabla">
     <thead>
@@ -30,7 +39,7 @@
     {% for bloque, reqs in bs %}{% for r in reqs if not dentro or estados[r.codigo][0] in dentro %}{% set _ = de_parte.append(r) %}{% endfor %}{% endfor %}
     {% if de_parte %}
     <tbody>
-        <tr class="parte"><td colspan="6">{{ parte }} <small>{% if parte == 'Anexo A' %}obligatorios si aplican{% else %}obligatorios siempre{% endif %}</small></td></tr>
+        <tr class="parte"><td colspan="6">{{ parte }} <small>{% if parte == 'Anexo A' %}obligatorios los que decidáis que aplican en la Declaración{% else %}obligatorios siempre{% endif %}</small></td></tr>
         {% for bloque, reqs in bs %}
         {% set vis = [] %}{% for r in reqs if not dentro or estados[r.codigo][0] in dentro %}{% set _ = vis.append(r) %}{% endfor %}
         {% if vis %}
@@ -39,12 +48,12 @@
         {% for r in vis %}
         {% set e, pct = estados[r.codigo] %}
         {% set av = est.avance(r.codigo) %}
-        <tr class="fila{% if e == 'noaplica' %} fila-noaplica{% endif %}">
+        <tr class="fila{% if e in ('noaplica', 'nohacefalta') %} fila-noaplica{% endif %}">
             <td class="col-cod"><a href="/requisitos/{{ r.codigo }}">{{ r.codigo }}</a></td>
             <td class="col-titulo"><a href="/requisitos/{{ r.codigo }}" title="{{ r.resumen }}">{{ r.titulo }}</a></td>
             <td class="col-tipo">{% for c in r.como %}<span class="etq">{{ c }}</span> {% endfor %}</td>
-            <td class="col-cuanto">{{ r.cada_cuanto|join(' · ') }}</td>
-            <td class="col-av">{% if e == 'noaplica' %}<span class="sub">—</span>{% else %}
+            <td class="col-cuanto">{% for c in r.cada_cuanto %}{{ CADA_CUANTO[c] }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
+            <td class="col-av">{% if e in ('noaplica', 'nohacefalta') %}<span class="sub">—</span>{% else %}
                 <div class="mini"><div class="mini-barra{% if e == 'hecho' %} ok{% endif %}"><span style="width: {{ av.porcentaje }}%"></span></div></div>
                 <span class="sub">{{ av.hechos }} de {{ av.total }} · <b>{{ av.porcentaje }} %</b></span>{% endif %}</td>
             <td class="col-est"><span class="sello {{ NOMBRES[e][1] }}">{{ NOMBRES[e][0] }}</span></td>

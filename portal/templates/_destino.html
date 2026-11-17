@@ -1,18 +1,17 @@
 {#- Desarrollado en Movired. Licencia PolyForm Internal Use 1.0.0 (solo uso interno; ver LICENSE). -#}
-{# Dónde se sube el borrador una vez completo, y lo que no cubre. #}
-{% macro enlace(c) %}<a href="/requisitos/{{ requisito_de[c].codigo }}#{{ c }}">{{ c }}</a>{% endmacro %}
+{# Dónde se sube el borrador una vez completo, y lo que no cubre: por letras de punto y con el nombre de cada ficha. #}
 <div class="destino">
     {% if destino.cubre %}
-    <p><strong>Cuando esté completo, súbelo a:</strong> {% for c in destino.cubre %}{{ enlace(c) }}{{ ", " if not loop.last }}{% endfor %}.</p>
+    <p><strong>Cuando lo termines,</strong> súbelo {{ puntos_llano(destino.cubre, req.codigo) }}.</p>
     {% endif %}
     {% if destino.firmado %}
-    <p><strong>Firmado, súbelo también a:</strong> {% for c in destino.firmado %}{{ enlace(c) }}{{ ", " if not loop.last }}{% endfor %}.</p>
+    <p><strong>Cuando esté firmado,</strong> súbelo también {{ puntos_llano(destino.firmado, req.codigo) }}.</p>
     {% endif %}
     {% if destino.nota %}<p>{{ destino.nota }}</p>{% endif %}
     {% if destino.aparte %}
-    <p><strong>No cubre:</strong></p>
+    <p><strong>Lo que el borrador no cubre:</strong></p>
     <ul>
-        {% for c, como in destino.aparte %}<li>{{ enlace(c) }}: {{ como }}</li>{% endfor %}
+        {% for c, como in destino.aparte %}<li>{{ puntos_llano([c], req.codigo, '')|replace('el punto', 'El punto', 1) }}: {{ como }}</li>{% endfor %}
     </ul>
     {% endif %}
 </div>

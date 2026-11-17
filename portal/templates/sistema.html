@@ -10,7 +10,7 @@
     <div>
         <p class="antetitulo">{{ TIPOS.get(x.tipo, '') }}{% if x.retirado %} · Retirado el {{ x.retirado|fecha }}{% endif %}</p>
         <h1 class="titular" id="sistema-nombre" {% if auto %}hx-swap-oob="true"{% endif %}>{{ x.nombre }}</h1>
-        <p class="bajada" id="sistema-resumen" {% if auto %}hx-swap-oob="true"{% endif %}>{{ x.completos }} de {{ campos|length }} campos · guardada el {{ x.actualizado|fecha }}</p>
+        <p class="bajada" id="sistema-resumen" {% if auto %}hx-swap-oob="true"{% endif %}>{{ x.completos }} de {{ campos|length }} apartados rellenos · último cambio el {{ x.actualizado|fecha }}</p>
     </div>
 </header>
 
@@ -58,8 +58,8 @@
             <div class="campo-ficha-cabeza">
                 <span class="campo-num">{{ loop.index }}</span>
                 <label for="{{ campo }}">{{ titulo }}</label>
-                <a class="etq" href="/requisitos/{{ punto.rsplit('.', 1)[0] }}#{{ punto }}">cumple {{ punto }}</a>
-                <span id="estado-{{ campo }}" {% if auto %}hx-swap-oob="true"{% endif %} class="sello {% if lleno %}s-ok{% else %}s-gris{% endif %}">{% if lleno %}Hecho{% else %}Pendiente{% endif %}</span>
+                <span id="estado-{{ campo }}" {% if auto %}hx-swap-oob="true"{% endif %} class="sello {% if lleno %}s-ok{% else %}s-gris{% endif %}">{% if lleno %}Relleno{% else %}Sin rellenar{% endif %}</span>
+                <a class="etq" href="/requisitos/{{ punto.rsplit('.', 1)[0] }}#{{ punto }}">cuenta para el requisito {{ punto.rsplit('.', 1)[0] }} ({{ titulo_de[punto.rsplit('.', 1)[0]] }})</a>
             </div>
             <p class="ayuda">{{ ayuda }}</p>
             <textarea id="{{ campo }}" name="{{ campo }}" rows="3" placeholder="{{ ejemplo }}">{{ x.campo(campo) }}</textarea>

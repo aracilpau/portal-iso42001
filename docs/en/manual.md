@@ -102,7 +102,9 @@ them either way.
 - **Progress:** two percentages, «Obligatorios» (Mandatory: clauses 4 to 10, which always have to be met) and
   «Controles del Anexo A» (Annex A controls: only those that apply). A requirement counts when it is complete.
   Controls not yet decided count as if they applied; those that do not apply do not count. Recommended points do not
-  count in the percentage.
+  count in the percentage. Controls that are only for the AI you offer to customers, if you have none, are «No hace
+  falta por ahora» (Not needed for now) and do not count either (it says so below). The greeting only says «Todo al
+  día» (All up to date) if the mandatory requirements are also complete.
 - **What is pending:** the list «Lo siguiente» (What's next), sorted by urgency (overdue, due soon, reminders, new
   systems, the question «¿Ha pasado algo?» (Has something happened?)), each with its button: «Ir a renovar» (Go to
   renew), «Hecho» (Done), «Decidir» (Decide), «No, nada» (No, nothing) (see **avisos**). There is also a map with a
@@ -155,11 +157,11 @@ for improvement, and conclusions and decisions.
   say «No vence por fecha» (Not due by date).
 - **Renewing:** the point's «Renovar» (Renew) button says it is still valid and starts counting again from today. It
   stands out when the point is due soon or overdue.
-- **The note «Cómo lo hacemos aquí»** (How we do it here): what is specific to the company (who is in charge, where
-  each thing is). It saves itself as you type. It is in the right-hand column.
+- **«Vuestras notas»** (Your notes): what is specific to the company (who is in charge, where you keep each thing, how
+  you do it). It saves itself as you type and every account of the company sees it. It is in the right-hand column.
 - **«¿Ha cambiado algo?»** (Has anything changed?): in requirements that are reopened by an event and have something
-  ticked. It asks for confirmation and sets their points back to pending. It is a box on the right, with the button
-  «Reabrir» (Reopen).
+  ticked. It asks for confirmation and sets their points back to pending until you confirm they are still valid (files
+  are not deleted). It is a box on the right, with the button «Volver a revisar» (Review again).
 - **Annex A controls:** the page says whether it applies to your company and links to the Statement of
   Applicability. If it does not apply, nothing is ticked and its files are not shown.
 - **«Lo último»** (Latest): on the right, the most recent things done in that requirement.
@@ -214,13 +216,12 @@ It may take a minute.
 - **Starting point:** the other 28 requirements that call for a document of their own (for example 7.4 or many Annex A
   controls) have a generic template: a section for each point demonstrated with a document, with what it has to say
   and what the auditor will ask for, all as [POR COMPLETAR], and at the end what does not go in the document. The only
-  company details it includes are the name, the date and who approves. On the page it appears as «Base para empezar el
-  documento» (Starting point for the document).
+  company details it includes are the name, the date and who approves.
 - There is no button on requirements that are only demonstrated with records or in practice (for example 7.3), nor on
   those met through others (8.1).
 - **With AI:** Claude writes the document in a formal style with everything in «Empresa» (including the open questions
-  and the AI's questions already answered), the inventory with the page of each system and the «Cómo lo hacemos aquí»
-  notes. **It does not read the uploaded files.** At the top it says «Borrador hecho con IA. Revísalo y apruébalo antes
+  and the AI's questions already answered), the inventory with the page of each system and «Vuestras notas» (Your
+  notes). **It does not read the uploaded files.** At the top it says «Borrador hecho con IA. Revísalo y apruébalo antes
   de usarlo» (Draft made with AI. Review and approve it before using it).
 - **Fixed structure:** the headings and sections are always those of the template (or of the generic starting point),
   in the same order; the AI only writes inside them. If nothing it is given has changed, you get the same draft as
@@ -255,26 +256,31 @@ It may take a minute.
 
 - **Points per system:** some points are met once for each AI system in the inventory (for example, the AI system
   impact assessment). They have one line per system, each with its checkbox, its files and its due date. The point is
-  met when it is met for all the active systems it applies to. Some are «Solo IA del producto» (Product AI only) and
-  ask nothing of the tools used internally.
+  met when it is met for all the active systems it applies to. Some are «Solo la IA que ofrecéis a clientes» (Only
+  the AI you offer to customers) and ask nothing of the AI the team uses. If you have no AI that you offer to
+  customers, those points are «No hace falta por ahora» (Not needed for now): they count neither as done nor as
+  pending, and if all the points of a requirement are like that, the requirement does not count in the percentage
+  either. When you add one, they become pending again.
 - **Points that are met automatically («apoyados», supported):** they rely on other requirements and are ticked
-  automatically when those are complete. They have no checkbox; they say «Se marcará solo cuando esté completo: …»
-  (It will be ticked automatically when complete: …).
+  automatically when those are complete. They have no checkbox; they say «Se marca solo cuando completes …» (It is
+  ticked automatically when you complete …), with the requirement's name.
 - **Points from the system page:** A.4.2.a to A.4.6.a are met automatically when the matching field is filled in on
   the page of each system in the inventory.
 - With no systems in the inventory, points per system stay pending.
 
 ## inventario
 
-**What it is:** the company's AI systems: the AI in the product and the AI tools the staff use.
+**What it is:** every AI in the company: the one you offer to your customers and the tools the team uses (ChatGPT,
+Copilot…).
 
-- **Adding a system:** type the name, choose «Del producto» (Product) or «Herramienta de uso» (Tool in use) and press
-  «Añadir» (Add). Its page opens.
+- **Adding a system:** type the name, choose what type of AI it is («La ofrecemos a clientes», We offer it to
+  customers, or «La usa el equipo», The team uses it) and press «Añadir» (Add). Its page opens.
   - When a system is added (or activated again), the page asks whether to reopen risks (8.2, 8.3) and suppliers
     (A.10.3), which cover the whole company. You can reopen what is ticked or answer «No hace falta» (Not needed). If it
     is not answered, the question stays pending in the alerts.
 - **The page of each system:** five fields (what it is for, data, tools, infrastructure, people), each with its help.
-  It saves itself when you leave each field. Each filled field meets one of the points A.4.2.a to A.4.6.a.
+  It saves itself when you leave each field. Each filled section counts for its requirement (A.4.2 to A.4.6): nothing
+  else needs uploading for that.
 - **Retiring:** the system stops counting; its page is kept and its files move to previous versions. It can be
   **activated again** («volver a activar») from the list of retired systems.
 
@@ -289,7 +295,7 @@ and why. The auditor asks about both cases.
   is cleared and a warning asks for the new one; that reason is kept as the reason for the change in «Cambios».
 - **Tabs:** «Controles» (Controls: deciding), «Cambios» (each decision and change with date and reason) and
   «Documento» (Document: preview; downloaded in Word or PDF, or saved as evidence in 6.1.3.c).
-- While a control is undecided, it counts in the percentage as if it applied.
+- While a control is undecided, it counts as pending in the progress.
 - **Unticking:** clicking the chosen option again («Aplica» or «No aplica») unticks it and the control goes back to
   «Sin decidir» (Undecided). It is recorded in «Cambios» («Se deja sin decidir» (Left undecided)) and in «Actividad»
   (Activity); the reason already written stays in the box.
@@ -308,8 +314,8 @@ and why. The auditor asks about both cases.
 - **Open questions,** in 5 blocks (the company and AI; people; customers, laws and suppliers; how you work; if you
   develop AI). They are answered in plain words, as you would to a colleague; each one has an example. Block 5 only
   appears if «No» has not been answered to whether you develop AI. Laws are not asked about.
-- Each answer saves itself when changed (the open ones, when you leave the box). At the top it says how many are
-  clarified: «No lo sé» counts as still to be clarified, just like a blank one.
+- Each answer saves itself when changed (the open ones, when you leave the box). At the top it says how many
+  questions are answered: «No lo sé» counts as unanswered, just like a blank one.
 - **When you change an answer that already had something,** below it appears the list of requirements that depend on
   it, as in «Ha pasado algo», to reopen those that need it. It does not appear when answering for the first time.
   General details do not reopen anything. Changing an answer does not touch what has already been decided in the
@@ -324,7 +330,7 @@ and why. The auditor asks about both cases.
 
 ## propuestas
 
-**What it is:** the «Proponer» (Propose) button, below the questionnaire. For each control it proposes «APLICA»
+**What it is:** the «Proponer qué controles aplican» (Propose which controls apply) button, below the questionnaire. For each control it proposes «APLICA»
 (APPLIES), «NO APLICA» (DOES NOT APPLY) or «FALTA SABER» (NEED TO KNOW), with the reason. It takes about half a minute.
 
 - **Who decides each one (mixed Statement of Applicability):**
@@ -357,8 +363,9 @@ something happens.
 
 - You choose the situation: new person or change of role, new AI supplier, incident or complaint, change in the company
   or in its management, or an external change (laws, customers, technology).
-- The list of requirements involved appears, with a checkbox on those that have something to reopen. «Reabrir los
-  marcados» (Reopen the ticked ones) sets their points back to pending. It is recorded in Activity, even if nothing is
+- The list of requirements involved appears, with a checkbox on those that have something to review again. «Volver a
+  revisar los marcados» (Review the ticked ones again) sets their points back to pending until you confirm they are
+  still valid; nothing is deleted. It is recorded in Activity, even if nothing is
   reopened.
 - Every so often (by default 4 months) the portal asks «¿Ha pasado algo?» in the alerts. This is changed in «Ajustes»
   (Settings).

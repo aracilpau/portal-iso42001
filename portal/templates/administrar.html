@@ -45,7 +45,7 @@
                 {% else %}
                 <span class="sub">Aún no hay empresas: créalas abajo.</span>
                 {% endfor %}
-                {% for e in de_todos %}<span class="sub">· {{ e.nombre }} (espacio común: entran todas las cuentas)</span>{% endfor %}
+                {% for e in de_todos %}<span class="sub">· {{ e.nombre }} (espacio común que ven todas las cuentas; no es ninguna de vuestras empresas)</span>{% endfor %}
                 {% if empresas %}<button class="boton boton-mini" type="submit">Guardar empresas</button>{% endif %}
             </form>
             {% if empresas and not f.suyas %}<p class="sub">Todavía no entra en ninguna empresa: márcalas y pulsa «Guardar empresas».</p>{% endif %}
@@ -75,7 +75,7 @@
                 <button class="boton boton-mini boton-peligro" type="button" data-peligro
                         data-confirmar="/administrar/cuenta/{{ u.id }}/entra" data-titulo="¿Quitar tu propia cuenta?"
                         data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Quitar mi cuenta"
-                        data-ayuda="Saldrás del portal y ya no podrás entrar. Lo que hiciste se queda en «Actividad». Para volver, otro administrador te tendrá que «Volver a dejar entrar».">Quitar</button>
+                        data-ayuda="Saldrás del portal y ya no podrás entrar. Lo que hiciste se queda en «Actividad». Para volver, otro administrador te tendrá que «Volver a dejar entrar».">Quitar la cuenta</button>
                 {% else %}
                 {% if u.activo %}
                 {# Dar o quitar el permiso, con confirmación, que dice qué cambia #}
@@ -94,7 +94,7 @@
                 <button class="boton boton-mini boton-peligro" type="button" data-peligro
                         data-confirmar="/administrar/cuenta/{{ u.id }}/entra" data-titulo="¿Quitar esta cuenta?"
                         data-nombre="{{ u.nombre }} ({{ u.correo }})" data-accion="Quitar la cuenta"
-                        data-ayuda="Dejará de poder entrar, aunque tenga el portal abierto. Lo que hizo se queda en «Actividad» y se puede deshacer con «Volver a dejar entrar».">Quitar</button>
+                        data-ayuda="Dejará de poder entrar, aunque tenga el portal abierto. Lo que hizo se queda en «Actividad» y se puede deshacer con «Volver a dejar entrar».">Quitar la cuenta</button>
                 {% else %}
                 <form method="post" action="/administrar/cuenta/{{ u.id }}/entra">
                     <input type="hidden" name="si" value="1">
@@ -133,14 +133,14 @@
 </section>
 
 <section class="seccion" id="empresas">
-    <div class="seccion-titulo"><h2>Empresas</h2><small>Borrar una empresa no se hace desde aquí: lo explica el manual
-        <code>docs\instalar.md</code></small></div>
+    <div class="seccion-titulo"><h2>Empresas</h2><small>Para borrar una empresa, pide ayuda a quien instaló el portal: lo explica el manual de
+        instalación, en «Si el administrador olvida su contraseña»</small></div>
     <div class="caja">
         {% if hecho and donde == 'empresas' %}<p class="mensaje" role="status">{{ hecho }}</p>{% endif %}
         {% if error and ancla == 'empresas' %}<p class="mensaje mensaje-error" role="alert">{{ error }}</p>{% endif %}
         <ul class="lista-empresas-admin">
             {% for e in empresas + de_todos %}
-            <li><strong>{{ e.nombre }}</strong> <span class="sub">{% if e.todos %}espacio común: entran todas las cuentas · {% endif %}sus archivos, en la carpeta «{{ e.slug }}»</span>
+            <li><strong>{{ e.nombre }}</strong> <span class="sub">{% if e.todos %}espacio común que ven todas las cuentas; no es ninguna de vuestras empresas · {% endif %}sus archivos, en la carpeta «{{ e.slug }}»</span>
                 {# Cambiar el nombre: el campo va fuera de un formulario, para que Intro no lo cambie sin preguntar #}
                 <details>
                     <summary class="boton boton-mini">Cambiar nombre</summary>

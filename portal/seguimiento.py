@@ -12,9 +12,11 @@ punto o, en los puntos por sistema, por punto y sistema. Todo lo demás se calcu
   del producto) y se cumple cuando lo están todas. Las líneas de A.4.2.a a A.4.6.a se
   cumplen con la ficha del inventario; las que se apoyan en otros requisitos miran la
   línea del mismo sistema, y los apoyos que no tocan a ese sistema no se miran. Sin
-  sistemas en el inventario, quedan pendientes; si hay sistemas pero a ninguno le toca, cuentan
-  como hechos;
-- un requisito está completo cuando lo están todos sus puntos que no son «Recomendado»;
+  sistemas en el inventario, quedan pendientes; si hay sistemas pero a ninguno le toca, «no hacen
+  falta por ahora»: ni cuentan como hechos ni como pendientes;
+- un requisito está completo cuando lo están todos sus puntos que no son «Recomendado» y hacen
+  falta; si ninguno hace falta, el requisito «no hace falta por ahora» y no entra en los porcentajes
+  (para los que se apoyan en él, no estorba);
 - la 4.4 (sin puntos) está completa cuando lo están todos los demás requisitos;
 - un control que no aplica (Declaración de Aplicabilidad) no cuenta en nada, y los puntos (o
   líneas) que se apoyaban en él pasan a ser trabajo propio (notas de 8.1, A.9.4 y A.10.4).
@@ -42,6 +44,7 @@ PENDIENTE = "pendiente"
 CUMPLIDO = "cumplido"
 VENCE_PRONTO = "vence_pronto"
 VENCIDO = "vencido"
+NO_HACE_FALTA = "no_hace_falta"  # por sistema, cuando hay sistemas pero a ninguno le toca
 CUENTAN = (CUMPLIDO, VENCE_PRONTO)
 
 ANTELACION = 30  # días antes de vencer en que un punto pasa a «vence pronto»
@@ -302,7 +305,7 @@ class Seguimiento:
                 return PENDIENTE  # sin inventario no hay nada que valga
             suyos = self.sistemas_de(p)
             if not suyos:
-                return CUMPLIDO   # hay sistemas, pero a ninguno le toca
+                return NO_HACE_FALTA  # hay sistemas, pero a ninguno le toca
             return _peor({self.estado_en(p, x) for x in suyos})
         if p.codigo not in self.marcas:
             return PENDIENTE
@@ -334,6 +337,9 @@ class Seguimiento:
     def con_ficha(self, req: guia.Requisito) -> bool:
         """Si alguno de sus puntos se cumple con la ficha del inventario (se pone al día ahí)."""
         return any(clase(p) == FICHA for p in req.puntos)
+
+    def hace_falta(self, p: guia.Punto) -> bool:
+        return self.estado(p) != NO_HACE_FALTA
 
     def cumplido(self, p: guia.Punto) -> bool:
         """Si cuenta en el porcentaje: cumplido o vence pronto."""
@@ -395,32 +401,47 @@ class Seguimiento:
             req = guia.requisito(codigo)
             obligatorios = [p for p in req.puntos if not p.recomendado]
             if obligatorios:
-                self._completo[codigo] = all(self.cumplido(p) for p in obligatorios)
+                self._completo[codigo] = all(self.cumplido(p) for p in obligatorios if self.hace_falta(p))
             else:
-                otros = [r.codigo for r in self.requisitos() if r.codigo != codigo and r.puntos]
-                self._completo[codigo] = all(self.completo(c) for c in otros)
+                self._completo[codigo] = all(self.completo(c) for c in self._otros(codigo))
         return self._completo[codigo]
+
+    def no_hace_falta(self, codigo: str) -> bool:
+        """Si ninguno de sus puntos obligatorios hace falta por ahora (solo IA del producto y no hay)."""
+        obligatorios = [p for p in guia.requisito(codigo).puntos if not p.recomendado]
+        return bool(obligatorios) and not any(self.hace_falta(p) for p in obligatorios)
+
+    def _otros(self, codigo: str) -> list[str]:
+        """Para la 4.4: todos los demás que cuentan."""
+        return [r.codigo for r in self.requisitos()
+                if r.codigo != codigo and r.puntos and not self.no_hace_falta(r.codigo)]
 
     def avance(self, codigo: str) -> Avance:
         req = guia.requisito(codigo)
         obligatorios = [p for p in req.puntos if not p.recomendado]
         if obligatorios:
-            return Avance(sum(self.cumplido(p) for p in obligatorios), len(obligatorios))
-        otros = [r.codigo for r in self.requisitos() if r.codigo != codigo and r.puntos]
+            necesarios = [p for p in obligatorios if self.hace_falta(p)]
+            return Avance(sum(self.cumplido(p) for p in necesarios), len(necesarios))
+        otros = self._otros(codigo)
         return Avance(sum(self.completo(c) for c in otros), len(otros))
 
     # --- Panel ---
 
     @cached_property
     def obligatorios(self) -> Avance:
-        reqs = [r for r in guia.requisitos() if r.obligatorio]
+        reqs = [r for r in guia.requisitos() if r.obligatorio and not self.no_hace_falta(r.codigo)]
         return Avance(sum(self.completo(r.codigo) for r in reqs), len(reqs))
 
     @cached_property
     def controles(self) -> Avance:
         # Los sin decidir cuentan como si aplicaran; solo excluir baja el total
-        reqs = [r for r in self.requisitos() if not r.obligatorio]
+        reqs = [r for r in self.requisitos() if not r.obligatorio and not self.no_hace_falta(r.codigo)]
         return Avance(sum(self.completo(r.codigo) for r in reqs), len(reqs))
+
+    @cached_property
+    def sin_hacer_falta(self) -> list[guia.Requisito]:
+        """Los controles que aplican pero no hacen falta por ahora (para decirlo en Inicio)."""
+        return [r for r in self.requisitos() if self.no_hace_falta(r.codigo)]
 
     @cached_property
     def recomendados(self) -> Avance:

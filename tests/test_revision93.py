@@ -108,7 +108,7 @@ def test_el_word_lleva_el_aviso_los_apartados_y_resalta_lo_que_falta():
 def test_el_boton_esta_en_el_avance_de_inicio_con_su_periodo(cliente):
     html = cliente.get("/").text
     assert 'action="/revision-direccion" data-descargar' in html
-    assert re.search(r"con lo del 15/03/2025 al\s+15/03/2026: el último año", html)
+    assert re.search(r"pasado del 15/03/2025 al 15/03/2026\. Es el último año", html)
 
 
 def test_prepara_el_borrador_con_los_datos_del_periodo(cliente, claude, reloj):
@@ -137,7 +137,7 @@ def test_tras_subir_una_revision_a_la_9_3_el_periodo_empieza_ahi(cliente, reloj)
     reloj.dia = date(2026, 6, 1)
     cliente.post("/requisitos/9.3/puntos/9.3.a/archivos", files=[("archivos", ("acta.pdf", b"%PDF", "application/pdf"))])
     reloj.dia = date(2026, 9, 15)
-    assert re.search(r"con lo del 01/06/2026 al\s+15/09/2026\.", cliente.get("/").text)
+    assert re.search(r"pasado del 01/06/2026 al 15/09/2026\.", cliente.get("/").text)
 
 
 def test_si_claude_falla_o_responde_raro_lo_dice(cliente, claude):

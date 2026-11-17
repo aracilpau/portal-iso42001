@@ -21,13 +21,13 @@
 
 {% if pestaña == 'controles' %}
 <p class="ayuda ayuda-arriba">Para cada control del Anexo A, decide si aplica a tu empresa y escribe por qué (en los dos casos:
-    el auditor pregunta por ambos). Se guarda solo. Mientras no lo decidas, cuenta en el porcentaje como si aplicara.</p>
+    el auditor pregunta por ambos). Se guarda solo. Mientras no lo decidas, el control cuenta como pendiente en tu avance.</p>
 
 {# El cuestionario está en «Empresa»: aquí, solo cuánto falta, porque decide los controles #}
 <p class="cuestionario-enlace{% if not perfil.completo %} mensaje mensaje-aviso{% endif %}" id="cuestionario">
     {% if perfil.completo %}Las respuestas de <a href="/empresa#cuestionario">«Empresa»</a> deciden muchos controles.
-    {% else %}Quedan {{ perfil.total - perfil.hechas }} de {{ perfil.total }} preguntas de <a href="/empresa#cuestionario">«Empresa»</a>
-    por aclarar: deciden muchos controles.{% endif %}
+    {% else %}Quedan {{ perfil.total - perfil.hechas }} de las {{ perfil.total }} respuestas de <a href="/empresa#cuestionario">«Empresa»</a>
+    que necesita la Declaración (los datos generales y las preguntas de «Cómo es vuestra IA»).{% endif %}
 </p>
 
 {# Ayuda con la Declaración: Claude propone, la persona acepta, cambia o descarta #}
@@ -38,7 +38,7 @@
           hx-post="/declaracion/proponer" hx-target="#declaracion" hx-select="#declaracion" hx-swap="outerHTML"
           hx-disabled-elt="find button">
         <button class="boton boton-acento" type="submit">
-            <span class="sin-pensar">{% if propuestas %}Volver a proponer{% else %}Proponer{% endif %}</span>
+            <span class="sin-pensar">{% if propuestas %}Volver a proponer{% else %}Proponer qué controles aplican{% endif %}</span>
             <span class="pensando">Pensando… (puede tardar un minuto)</span>
         </button>
     </form>
@@ -151,7 +151,8 @@
     </select>
     <button class="boton" type="submit">Descargar</button>
     <button class="boton boton-acento" type="submit" formmethod="post" formaction="/declaracion/documento/guardar">Guardar como prueba</button>
-    <span class="sub">Descargar no guarda nada; «Guardar como prueba» lo deja en la 6.1.3.c.</span>
+    <span class="sub">«Descargar» te da una copia en tu ordenador. «Guardar como prueba» además la deja guardada en el portal, en el
+        requisito 6.1.3 (punto c), que es donde la pedirá el auditor.</span>
 </form>
 
 <section class="seccion">

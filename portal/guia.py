@@ -11,7 +11,7 @@ from guia import datos
 
 COMO = {"D": "Documento", "R": "Registro", "I": "Inventario", "P": "Práctica", "S": "Resumen"}
 CADA_CUANTO = {"Pe": "Periódico", "Ev": "Por evento", "U": "Una vez y revisar"}
-POR_SISTEMA = {"Todos": "Por sistema", "Solo producto": "Solo IA del producto"}
+POR_SISTEMA = {"Todos": "Una vez por cada IA", "Solo producto": "Solo la IA que ofrecéis a clientes"}
 RECOMENDADO = " (recomendado)"
 
 

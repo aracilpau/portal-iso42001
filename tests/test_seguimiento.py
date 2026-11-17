@@ -131,12 +131,12 @@ def test_desmarcar_desde_la_ficha(cliente):
 
 def test_la_ficha_explica_cuantos_puntos_se_cumplen_solos(cliente):
     ficha = cliente.get("/requisitos/7.4").text
-    assert "De 3 puntos, 2 se cumplen solos al completar otros requisitos; te queda 1 propio." in ficha
+    assert "De los 3 puntos: 1 lo haces tú y 2 se marcan solos cuando completes otros requisitos." in ficha
 
 
 def test_un_punto_apoyado_dice_a_que_espera(cliente):
     ficha = cliente.get("/requisitos/7.3").text
-    assert "Se marcará solo cuando esté completo: 5.2." in ficha
+    assert 'Se marca solo cuando completes <a href="/requisitos/5.2">5.2</a> (Política de IA).' in ficha
 
 
 def test_no_se_pueden_marcar_a_mano_los_apoyados_ni_los_de_sistema(cliente):
@@ -155,4 +155,4 @@ def test_guardar_y_borrar_la_nota(cliente):
 def test_el_panel_avisa_de_que_los_controles_cuentan_todos(cliente):
     panel = cliente.get("/").text
     assert "Aún no has decidido qué controles del Anexo A aplican" in panel
-    assert "Recomendados: 0 de 3" in panel
+    assert "Puntos recomendados (no obligatorios): 0 de 3 hechos." in panel

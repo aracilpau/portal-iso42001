@@ -98,7 +98,7 @@ def mensaje(*, perfil: dict, desde: date, hasta: date, anterior: bool, est, acti
         or ["- Ninguno en el periodo."]
     activos = [x for x in sistemas if x.retirado is None]
     lineas.append(f"- Sistemas activos hoy ({len(activos)}): " + (", ".join(
-        f"{x.nombre} ({'del producto' if x.tipo == 'producto' else 'herramienta de uso'})" for x in activos) or "ninguno"))
+        f"{x.nombre} ({'la ofrecemos a clientes' if x.tipo == 'producto' else 'la usa el equipo'})" for x in activos) or "ninguno"))
     lineas += ["", "# Cambios en la Declaración de Aplicabilidad"]
     del_periodo_cambios = [c for c in cambios if desde.isoformat() <= c["fecha"] <= hasta.isoformat()]
     lineas += [f"- {c['fecha']}: {c['control']}: {c['antes']} → {c['ahora']}. Motivo: {c['motivo']}"

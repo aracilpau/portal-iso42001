@@ -4,16 +4,18 @@
 {% block contenido %}
 {# Lo que hay que hacer, ordenado por urgencia: los avisos viven aquí #}
 {% set n = hay.vencidos|length + hay.pronto|length + hay.recordatorios|length + hay.pregunta|length + hay.altas|length %}
-{# El saludo, en una lámina sobre una mancha de color: el único sitio de color fuerte junto al mapa #}
+{# El saludo: cuántas cosas quedan; «al día» solo si además lo obligatorio está completo #}
+{% set ob = est.obligatorios %}
 <section class="saludo">
     <div class="mancha"><div class="lamina">
         <p class="antetitulo">{{ hoy|fecha_larga }} · {{ espacio.nombre }}</p>
-        <h1 class="titular">{% if n %}Te queda{{ 'n' if n != 1 }} <em>{{ n }} cosa{{ 's' if n != 1 }}</em><br>por hacer.{% else %}Todo <em>al día</em>.{% endif %}</h1>
+        <h1 class="titular">{% if n %}Te queda{{ 'n' if n != 1 }} <em>{{ n }} cosa{{ 's' if n != 1 }}</em><br>por hacer.{% elif ob.hechos < ob.total %}Nada vencido <em>ni por vencer</em>.{% else %}Todo <em>al día</em>.{% endif %}</h1>
         <p>
             {% set v = hay.vencidos|length %}
             {% if v %}{{ v }} punto{{ 's' if v != 1 }} ya ha{{ 'n' if v != 1 }} vencido y no cuenta{{ 'n' if v != 1 }} en el porcentaje hasta que lo{{ 's' if v != 1 }} renueves.
             {% elif hay.pronto %}Lo más urgente vence el {{ hay.pronto[0].vence|fecha }}.
             {% elif n %}Nada vencido ni a punto de vencer.
+            {% elif ob.hechos < ob.total %}Aún te queda{{ 'n' if ob.total - ob.hechos != 1 }} {{ ob.total - ob.hechos }} requisito{{ 's' if ob.total - ob.hechos != 1 }} obligatorio{{ 's' if ob.total - ob.hechos != 1 }} por completar.
             {% else %}No hay nada vencido, nada que venza pronto ni recordatorios pendientes.{% endif %}
         </p>
         <a class="boton boton-acento" href="/requisitos?ver=pendientes">Ver todo lo pendiente →</a>
@@ -22,7 +24,7 @@
 
 <div class="inicio">
     <div>
-        <div class="seccion-titulo"><h2>Cómo vas</h2><small>pasa el ratón por un cuadro</small></div>
+        <div class="seccion-titulo"><h2>Cómo vas</h2></div>
         <div class="cifras">
             {% for nombre, av, de in [('Obligatorios', est.obligatorios, 'completos'), ('Anexo A', est.controles, 'que aplican')] %}
             <a class="cifra" href="/requisitos">
@@ -33,6 +35,11 @@
             </a>
             {% endfor %}
         </div>
+        {% set nhf = est.sin_hacer_falta|length %}
+        {% if nhf %}
+        <p class="pie-cifras">{{ nhf }} control{{ 'es' if nhf != 1 }} del Anexo A no hace{{ 'n' if nhf != 1 }} falta por ahora y no cuenta{{ 'n' if nhf != 1 }} en el
+            porcentaje: solo son para la IA que ofrecéis a vuestros clientes, y en «Sistemas de IA» no hay ninguna.</p>
+        {% endif %}
         {% if sin_decidir %}
         <p class="pie-cifras alerta">
             {% if sin_decidir == guia.controles %}Aún no has decidido qué controles del Anexo A aplican a tu empresa.
@@ -52,22 +59,24 @@
                 <span class="sin-pensar">Preparar la revisión del año →</span>
                 <span class="pensando">Preparando… (puede tardar un minuto)</span>
             </button>
-            <p class="ayuda">Borrador del acta de la revisión por la dirección (9.3), en Word, con lo del {{ desde|fecha }} al
-                {{ hasta|fecha }}{% if not anterior %}: el último año, porque aún no hay ninguna revisión subida a la 9.3{% endif %}.</p>
+            <p class="ayuda">Prepara en Word el borrador del acta de la reunión anual de la dirección (requisito 9.3), con lo que ha
+                pasado del {{ desde|fecha }} al {{ hasta|fecha }}{% if not anterior %}. Es el último año porque aún no habéis guardado
+                ningún acta anterior en la 9.3{% endif %}.</p>
             <p class="mensaje mensaje-error" data-descargar-error role="alert" hidden></p>
         </form>
-        <p class="pie-cifras">Recomendados: {{ est.recomendados.hechos }} de {{ est.recomendados.total }} · no cuentan en el porcentaje</p>
+        <p class="pie-cifras">Puntos recomendados (no obligatorios): {{ est.recomendados.hechos }} de {{ est.recomendados.total }} hechos. No cuentan en el porcentaje.</p>
 
+        <p class="ayuda">Cada cuadro es un requisito: pasa el ratón por encima para ver cuál es, o púlsalo para abrirlo.</p>
         <div class="mapa" aria-label="Estado de cada requisito">
             {% set NOMBRES = {'hecho': 'Completo', 'curso': 'En curso', 'pendiente': 'Sin empezar', 'vencido': 'Algo vencido',
-                              'pronto': 'Algo vence pronto', 'noaplica': 'No aplica'} %}
+                              'pronto': 'Algo vence pronto', 'noaplica': 'No aplica', 'nohacefalta': 'No hace falta por ahora'} %}
             {% for parte, bs in bloques %}{% for bloque, reqs in bs %}
             <div class="mapa-fila">
                 <span class="mapa-nombre">{{ bloque }}</span>
                 <span class="mapa-celdas">
                     {% for r in reqs %}{% set e, pct = estados[r.codigo] %}
                     <a class="celda c-{{ e }}" href="/requisitos/{{ r.codigo }}" style="--p: {{ pct }}%"
-                       data-info="{{ r.codigo }} · {{ r.titulo }} — {{ NOMBRES[e] }}{% if e not in ('hecho', 'noaplica') %} · {{ pct }} %{% endif %}"
+                       data-info="{{ r.codigo }} · {{ r.titulo }} — {{ NOMBRES[e] }}{% if e not in ('hecho', 'noaplica', 'nohacefalta') %} · {{ pct }} %{% endif %}"
                        aria-label="{{ r.codigo }} {{ r.titulo }}: {{ NOMBRES[e] }}"></a>
                     {% endfor %}
                 </span>
@@ -77,7 +86,7 @@
         <div class="leyenda">
             <span><i class="c-hecho"></i>Completo</span><span><i class="c-curso" style="--p: 50%"></i>En curso</span>
             <span><i class="c-pendiente"></i>Sin empezar</span><span><i class="c-pronto"></i>Vence pronto</span>
-            <span><i class="c-vencido"></i>Vencido</span><span><i class="c-noaplica"></i>No aplica</span>
+            <span><i class="c-vencido"></i>Vencido</span><span><i class="c-noaplica"></i>No aplica o no hace falta</span>
         </div>
     </div>
 

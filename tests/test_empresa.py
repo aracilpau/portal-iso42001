@@ -126,7 +126,7 @@ def test_empresa_esta_en_el_menu_y_tiene_todo_junto(dentro):
 
 def test_una_abierta_se_guarda_sola_y_la_lee_el_chat(dentro):
     r = dentro.post("/empresa/respuesta/uso", data={"valor": "  Un asistente en la web.  "}, headers=HX)
-    assert "1 de 29 aclaradas" in r.text and "Guardado a las" in r.text
+    assert "1 de 29 preguntas contestadas" in r.text and "Guardado a las" in r.text
     assert ">Un asistente en la web.</textarea>" in dentro.get("/empresa").text
     assert "¿Para qué usáis la IA y qué os aporta?" in dentro.get("/actividad").text
     assert "¿Para qué usáis la IA y qué os aporta? → Un asistente en la web." in \
@@ -155,7 +155,7 @@ def test_al_cambiar_una_abierta_propone_reabrir_y_reabre_lo_elegido(dentro):
     r = dentro.post("/empresa/respuesta/auditoria", data={"valor": "Alguien de calidad."}, headers=HX)
     assert 'action="/empresa/reabrir/auditoria"' in r.text and 'name="requisitos" value="9.2" checked' in r.text
     r = dentro.post("/empresa/reabrir/auditoria", data={"requisitos": ["9.2"]})
-    assert "Reabierto: 9.2." in r.text
+    assert "Para volver a revisar: 9.2." in r.text
     assert "- 9.2.a: pendiente" in dentro.app.state.consultas_de("lambda").estado_requisito("9.2")
     assert "por cambiar «¿Quién haría la auditoría interna?»" in dentro.get("/actividad").text
 

@@ -58,7 +58,7 @@
         {% block contenido %}{% endblock %}
     </main>
 
-    <footer class="pie-portal">Desarrollado en Movired · <a href="/licencia">Licencia de uso interno</a></footer>
+    <footer class="pie-portal">{% if version_portal %}{{ version_portal }} · {% endif %}Desarrollado en Movired · <a href="/licencia">Licencia de uso interno</a></footer>
 
     {% if sesion and sesion.empresa %}{% include "_chat.html" %}{% endif %}
 

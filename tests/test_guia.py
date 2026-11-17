@@ -57,9 +57,9 @@ def test_los_apoyos_son_codigos_de_requisitos_que_existen():
 
 def test_los_puntos_por_sistema_llevan_su_etiqueta():
     logs = next(p for p in guia.requisito("A.6.2.8").puntos if p.codigo == "A.6.2.8.b")
-    assert logs.por_sistema == "Solo IA del producto"
+    assert logs.por_sistema == "Solo la IA que ofrecéis a clientes"
     impacto = guia.requisito("A.5.4").puntos[0]
-    assert impacto.por_sistema == "Por sistema"
+    assert impacto.por_sistema == "Una vez por cada IA"
     assert guia.requisito("4.1").puntos[0].por_sistema == ""
 
 
@@ -93,7 +93,7 @@ def test_la_ficha_de_un_control_enseña_su_ayuda(cliente):
     html = cliente.get("/requisitos/A.6.2.8").text
     assert "Control del Anexo A" in html
     assert "¿Aplica a tu empresa?" in html
-    assert "Solo IA del producto" in html
+    assert "Solo la IA que ofrecéis a clientes" in html
 
 
 def test_se_apoya_en_enlaza_a_la_otra_ficha(cliente):

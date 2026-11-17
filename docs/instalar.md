@@ -243,7 +243,24 @@ pierden, el portal vuelve a preguntar.
 
 ## Actualizar a una versión nueva
 
-Tus datos no están en la carpeta del programa, así que actualizar es cambiar esa carpeta por la nueva:
+Para saber qué versión tienes, mira el pie de cualquier pantalla: «Versión del 17/11/2026».
+
+Tus datos no están en la carpeta del programa, así que actualizar es cambiar esa carpeta por la nueva. Lo hace solo
+`actualizar.bat`:
+
+1. **Haz una copia de seguridad** (ver arriba).
+2. **Doble clic en `actualizar.bat`**, en la carpeta del programa. Mira en GitHub si hay una versión más nueva que la
+   tuya:
+   - Si no la hay, dice «Ya estás al día» y no hace nada más.
+   - Si la hay, dice de qué fecha es y pregunta si actualizar: escribe `s` y pulsa Intro.
+3. **Él solo** apaga el portal, descarga la versión nueva, cambia los archivos del programa y vuelve a arrancar el
+   portal. La primera vez que arranca después tarda un par de minutos, como al instalar.
+
+No toca tus datos, tus ajustes ni las contraseñas. La versión de antes queda guardada aparte,
+junto a los ajustes del portal en tu usuario de Windows (carpeta `version-anterior`), y si algo falla a mitad, deja el programa como estaba. Solo se conecta a
+GitHub para mirar la versión y descargarla: no envía nada.
+
+**A mano**, si lo prefieres (o si no tienes internet en ese ordenador y traes el ZIP de otro):
 
 1. **Haz una copia de seguridad** (ver arriba).
 2. **Apaga el portal** (cierra la ventana negra o `parar.bat`).

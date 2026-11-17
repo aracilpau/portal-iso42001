@@ -97,7 +97,7 @@ def test_lo_siguiente_el_inventario_la_declaracion_y_el_cuestionario(app):
         c.post("/declaracion/cuestionario/entrena", data={"valor": "no"})
         q = app.state.consultas_de("general")
         assert "Hoy es 15/03/2026" in q.lo_siguiente() and "Controles sin decidir: 37" in q.lo_siguiente()
-        assert "- ChatGPT (Herramienta de uso)" in q.inventario()
+        assert "- ChatGPT (La usa el equipo)" in q.inventario()
         assert "- A.10.4 Clientes: no aplica · Sin clientes con IA." in q.declaracion()
         assert "¿Entrenáis o ajustáis modelos con datos vuestros? → No" in q.cuestionario()
 

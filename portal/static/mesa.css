@@ -206,7 +206,7 @@ textarea { width: 100%; resize: vertical; }
 .c-pendiente { background: var(--gris-suave); box-shadow: inset 0 0 0 1px var(--linea); }
 .c-vencido { background: var(--mal); }
 .c-pronto { background: var(--aviso); }
-.c-noaplica { background: repeating-linear-gradient(45deg, var(--gris-suave) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--linea); }
+.c-noaplica, .c-nohacefalta { background: repeating-linear-gradient(45deg, var(--gris-suave) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--linea); }
 .leyenda { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 13px; color: var(--tinta-2); }
 .leyenda i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
 
@@ -775,7 +775,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--tinta); }
 .c-pendiente { background: transparent; box-shadow: none; outline: 1px dashed var(--borde-campo); outline-offset: -1px; }
 .c-vencido { background: var(--mal-celda); }
 .c-pronto { background: var(--aviso-celda); }
-.c-noaplica { background: repeating-linear-gradient(45deg, var(--linea) 0 1px, transparent 1px 5px); box-shadow: none; outline: 1px dotted var(--borde-campo); outline-offset: -1px; }
+.c-noaplica, .c-nohacefalta { background: repeating-linear-gradient(45deg, var(--linea) 0 1px, transparent 1px 5px); box-shadow: none; outline: 1px dotted var(--borde-campo); outline-offset: -1px; }
 .celda:hover { outline: 2px solid var(--tinta); outline-offset: 1px; }
 
 /* ¿Ha pasado algo?: un bloque oscuro que no se invierte en el modo oscuro */
@@ -897,7 +897,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--tinta); }
 .mini-barra { height: 8px; }
 .c-curso { background: linear-gradient(to top, var(--curso) var(--p), color-mix(in srgb, var(--curso) 30%, transparent) var(--p)); }
 .leyenda i { width: 14px; height: 14px; }
-.leyenda .c-noaplica { background: repeating-linear-gradient(45deg, var(--tinta-3) 0 1px, transparent 1px 4px); outline-color: var(--tinta-3); }
+.leyenda .c-noaplica, .leyenda .c-nohacefalta { background: repeating-linear-gradient(45deg, var(--tinta-3) 0 1px, transparent 1px 4px); outline-color: var(--tinta-3); }
 
 /* La lista: el nombre se ve como enlace; el porcentaje y el recuento, en una línea */
 .tabla .col-titulo a { text-decoration: underline; text-decoration-color: var(--linea); text-underline-offset: 4px; }
@@ -946,3 +946,11 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--tinta); }
 .pagina > ul { padding-left: 22px; margin-bottom: 16px; }
 .licencia-texto { margin-top: 14px; }
 .col-av .sub b { font-family: var(--mono); font-weight: 500; color: var(--tinta); }
+
+/* La lista de requisitos: qué quieren decir sus columnas */
+.leyenda-columnas { margin: 0 0 18px; font-size: 14px; color: var(--tinta-2); }
+.leyenda-columnas summary { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.leyenda-columnas dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 0; }
+.leyenda-columnas dt { font-weight: 600; color: var(--tinta); }
+.leyenda-columnas dd { margin: 0; }
+@media (max-width: 600px) { .leyenda-columnas dl { grid-template-columns: 1fr; } .leyenda-columnas dd { margin-bottom: 6px; } }

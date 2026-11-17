@@ -338,7 +338,7 @@ def test_sin_claude_code_se_puede_proponer_lo_que_decide_el_portal(bd, claude, m
     monkeypatch.setattr(ia, "disponible", lambda: False)
     with en_portal(bd, hoy=lambda: DIA) as c:
         html = c.get("/declaracion").text
-        assert re.search(r'<button class="boton boton-acento" type="submit">\s*<span class="sin-pensar">Proponer<', html)
+        assert re.search(r'<button class="boton boton-acento" type="submit">\s*<span class="sin-pensar">Proponer qué controles aplican<', html)
         assert "se proponen los controles que se deciden con tus respuestas" in html
         c.post("/declaracion/cuestionario/entrena", data={"valor": "no"}, headers=HX)
         r = c.post("/declaracion/proponer", headers=HX)
