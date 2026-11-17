@@ -43,6 +43,9 @@ El portal tiene un solo estilo, **Plano**, con modo claro y oscuro: el menú arr
   tiene todo lo suyo: seguimiento, Declaración, inventario, cuestionario, ajustes, avisos, Actividad y archivos. Nada
   se mezcla entre empresas. En algunos portales sale también **«General»**: un espacio común en el que entran todas las
   cuentas (no es una empresa que se certifique). En las instalaciones nuevas no se crea.
+- **Portada:** al entrar en una empresa (también al cambiar de empresa) y al recargar la página, sale una portada de
+  colores con «42001» en grande, que se desvanece sola en un momento; con un clic o una tecla se quita antes. Al
+  moverte por las pantallas, no sale.
 - **Dónde está todo:** en el portal compartido, en el servidor (un MySQL): las cuentas, las empresas y lo que se
   rellena valen desde cualquier ordenador, y lo que marca uno lo ven los demás. Los archivos de pruebas, en la carpeta
   compartida que elige cada uno en su ordenador (ver «carpetas»). En el modo «solo en este ordenador», todo está en tu

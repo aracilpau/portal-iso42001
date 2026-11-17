@@ -954,3 +954,28 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--tinta); }
 .leyenda-columnas dt { font-weight: 600; color: var(--tinta); }
 .leyenda-columnas dd { margin: 0; }
 @media (max-width: 600px) { .leyenda-columnas dl { grid-template-columns: 1fr; } .leyenda-columnas dd { margin-bottom: 6px; } }
+
+/* La portada de bienvenida: la mancha de colores fundidos con grano (la del estilo «taller») y «42001» en caracteres.
+   Los colores de la mancha son de imagen: solo se usan aquí, nunca en texto ni botones */
+.portada { position: fixed; inset: 0; z-index: 1000; overflow: hidden; isolation: isolate; cursor: pointer;
+    background: #8fb3a8; transition: opacity .6s ease; }
+.portada[hidden] { display: none; }
+.portada::before { content: ""; position: absolute; inset: -20%; z-index: -2;
+    background:
+        radial-gradient(28% 34% at 72% 26%, #c8532a, transparent 70%),
+        radial-gradient(30% 26% at 58% 48%, #e8a33d, transparent 72%),
+        radial-gradient(22% 30% at 22% 76%, #c8532a, transparent 70%),
+        radial-gradient(26% 22% at 34% 70%, #e8a33d, transparent 72%),
+        radial-gradient(40% 30% at 82% 80%, #e9d6c2, transparent 70%),
+        radial-gradient(34% 30% at 12% 20%, #9cc7da, transparent 70%);
+    filter: blur(28px) saturate(1.05); animation: portada-deriva 12s ease-in-out infinite alternate; }
+.portada::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .38; mix-blend-mode: soft-light;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.4 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat; }
+.portada.se-va { opacity: 0; pointer-events: none; }
+.portada-letras { position: absolute; inset: 0; margin: 0; font: 13px/1 var(--mono); white-space: pre; user-select: none;
+    color: rgba(35, 32, 28, .28); }
+.portada-letras b { font-weight: 500; color: #23201c; }
+@keyframes portada-deriva { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(-4%, 3%) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .portada, .portada::before { animation: none; transition: none; }
+}

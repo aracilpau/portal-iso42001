@@ -17,6 +17,67 @@
 </head>
 <body>
     {% set sesion = sesion_actual() %}
+    {# La portada de bienvenida: al entrar en una empresa (también al cambiar de empresa) y al recargar. Va antes que
+       la página y sin aparecer poco a poco, para que no se vea la pantalla de debajo primero. La mancha de colores y
+       «42001» dibujado con caracteres; se desvanece sola (o con un clic o una tecla) y se quita #}
+    {% if sesion and sesion.empresa %}
+    <div class="portada mancha-portada" id="portada" aria-hidden="true" hidden data-ver="{{ 'si' if dar_portada() else 'no' }}">
+        <pre class="portada-letras"></pre>
+    </div>
+    <script>
+        (() => {
+            const p = document.getElementById("portada");
+            const nav = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+            if (p.dataset.ver !== "si" && !(nav && nav.type === "reload")) { p.remove(); return; }
+            p.hidden = false;
+            // «42001» en caracteres: se pinta el número en un lienzo del tamaño de la rejilla (un píxel por carácter)
+            // y cada casilla lleva un signo según esté dentro de las cifras o en el fondo
+            const pre = p.querySelector("pre");
+            const prueba = document.createElement("span");
+            prueba.textContent = "+";
+            pre.appendChild(prueba);
+            const caja = prueba.getBoundingClientRect();
+            const ancho = caja.width || 8, alto = caja.height || 13;
+            const cols = Math.ceil(innerWidth / ancho), filas = Math.ceil(innerHeight / alto);
+            const lienzo = document.createElement("canvas");
+            lienzo.width = cols; lienzo.height = filas;
+            const g = lienzo.getContext("2d");
+            const escala = alto / ancho;  // las casillas son más altas que anchas
+            const tam = Math.min(filas * escala * 0.6, cols / 3.6);
+            g.font = `900 ${tam}px "Segoe UI", Arial, sans-serif`;
+            g.textAlign = "center"; g.textBaseline = "alphabetic";
+            g.setTransform(1, 0, 0, 1 / escala, cols / 2, filas / 2);
+            const m = g.measureText("42001");  // centrado por lo que se ve de las cifras, no por la caja de la letra
+            g.fillText("42001", 0, (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
+            const px = g.getImageData(0, 0, cols, filas).data;
+            const fuertes = "*/+=#", suaves = "+-*/·";
+            let html = "";
+            for (let y = 0; y < filas; y++) {
+                let fila = "", tipo = "";
+                const cerrar = () => { if (fila) html += tipo ? `<b>${fila}</b>` : fila; fila = ""; };
+                for (let x = 0; x < cols; x++) {
+                    const dentro = px[(y * cols + x) * 4 + 3] > 110;
+                    const onda = Math.sin(x * 0.13 + y * 0.21) + Math.cos(Math.hypot(x - cols / 2, (y - filas / 2) * 2) * 0.12);
+                    const signo = dentro ? fuertes[(x * 7 + y * 3) % fuertes.length]
+                        : (onda > 0.55 ? suaves[(x * 3 + y * 5) % suaves.length] : " ");
+                    if ((dentro ? "b" : "") !== tipo) { cerrar(); tipo = dentro ? "b" : ""; }
+                    fila += signo;
+                }
+                cerrar();
+                html += "\n";
+            }
+            pre.innerHTML = html;
+            const quitar = () => {
+                if (!p.isConnected || p.classList.contains("se-va")) return;
+                p.classList.add("se-va");
+                setTimeout(() => p.remove(), 600);
+            };
+            setTimeout(quitar, 1500);
+            p.addEventListener("click", quitar);
+            document.addEventListener("keydown", quitar, { once: true });
+        })();
+    </script>
+    {% endif %}
     {# Quién está y en qué empresa: en una franja fina encima, para no apretar el menú #}
     {% if sesion %}
     <div class="franja">

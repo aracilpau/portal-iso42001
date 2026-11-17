@@ -221,6 +221,18 @@ class Sesion:
     usuario: cuentas.Usuario | None
     empresa: cuentas.Empresa | None = None
     administrador: bool = False  # se mira en cada petición
+    portada: bool = False  # acaba de entrar en una empresa: su primera pantalla lleva la portada (una sola vez)
+
+
+def dar_portada() -> bool:
+    """Si la pantalla que se pinta lleva la portada de bienvenida: la primera después de entrar en una empresa (al
+    entrar con correo y contraseña o al cambiar de empresa). Al darla, la marca se quita. Al recargar la página
+    también sale, pero eso lo decide el navegador (base.html)."""
+    s = ACTUAL.get(None)
+    if s is None or s.empresa is None or not s.portada:
+        return False
+    s.portada = False
+    return True
 
 
 # La sesión de la petición que se está atendiendo: la pone `acceso` y la leen `bd()`, `carpetas()` y las páginas
@@ -233,6 +245,7 @@ LIBRES = ("/entrar", "/static", "/sin-conexion", "/licencia")  # se ven sin habe
 
 SIN_EMPRESA = ("/empresas", "/salir", "/carpeta", "/administrar", "/contrasena")  # se ven sin haber elegido empresa
 plantillas.env.globals["sesion_actual"] = lambda: ACTUAL.get(None)
+plantillas.env.globals["dar_portada"] = dar_portada
 
 
 def cifras_guia() -> dict:
@@ -465,6 +478,7 @@ def crear_app(datos: Path = config.DATOS, hoy: Callable[[], date] = date.today, 
         if not cuentas.puede_entrar(datos, s.usuario.id, slug):
             raise HTTPException(404)
         s.empresa = cuentas.empresa(datos, slug)
+        s.portada = True
         if falta_carpeta():
             return RedirectResponse("/carpeta", status_code=303)
         preparar(slug)

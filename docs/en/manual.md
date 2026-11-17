@@ -49,6 +49,9 @@ them either way.
   company has everything of its own: tracking, Statement of Applicability, inventory, questionnaire, settings, alerts,
   Activity and files. Nothing is mixed between companies. In some portals there is also **«General»** (General): a
   shared space that all accounts can enter (it is not a company being certified). New installations do not create it.
+- **Welcome screen:** when you enter a company (also when changing company) and when you reload the page, a colourful
+  welcome screen with «42001» in large type appears and fades away by itself in a moment; a click or a key removes it
+  sooner. It does not appear when moving between screens.
 - **Where everything is:** in the shared portal, on the server (a MySQL database): the accounts, the companies and what
   you fill in are valid from any computer, and what one person ticks the others see. The evidence files are in the
   shared folder each person chooses on their computer (see «carpetas»). In the «Solo en este ordenador» (Only on this
